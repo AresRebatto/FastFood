@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accedi o registrati — FastFood</title>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
+<style>
+/* =========================================================
+   FASTFOOD — DESIGN TOKENS (dal design system esistente)
+   ========================================================= */
+:root {
+  --color-primary: #D8402A;
+  --color-primary-dark: #A82F1E;
+  --color-secondary: #1F3D2B;
+  --color-accent: #F2A93B;
+  --color-success: #3A7D44;
+  --color-warning: #C97A0E;
+  --color-error: #B3261E;
+  --color-info: #2B6CB0;
+
+  --color-neutral-900: #211C1A;
+  --color-neutral-700: #4B4340;
+  --color-neutral-400: #8C8380;
+  --color-neutral-200: #E8E2DD;
+  --color-neutral-100: #F5F1EC;
+  --color-neutral-0: #FFFFFF;
+
+  --font-display: "Space Grotesk", "Cabinet Grotesk", sans-serif;
+  --font-body: "Inter", "General Sans", sans-serif;
+  --font-mono: "IBM Plex Mono", monospace;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  --radius-sm: 6px;
+  --radius-md: 12px;
+  --radius-lg: 20px;
+  --radius-full: 999px;
+
+  --shadow-1: 0 1px 2px rgba(33, 28, 26, 0.06);
+  --shadow-2: 0 4px 12px rgba(33, 28, 26, 0.10);
+  --shadow-3: 0 12px 32px rgba(33, 28, 26, 0.16);
+
+  --header-height: 72px;
+}
+
+/* =========================================================
+   RESET & BASE
+   ========================================================= */
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--color-neutral-900);
+  background: var(--color-neutral-100);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+input { font-family: inherit; font-size: 1rem; }
+
+h1, h2, h3 {
+  font-family: var(--font-display);
+  margin: 0;
+  color: var(--color-neutral-900);
+  letter-spacing: -0.01em;
+}
+h1 { font-size: 2.25rem; font-weight: 700; line-height: 1.1; }
+p { margin: 0; }
+
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+.container {
+  width: 100%;
+  max-width: 1200px;
+  margin-inline: auto;
+  padding-inline: var(--space-4);
+}
+@media (min-width: 768px) {
+  .container { padding-inline: var(--space-8); }
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+  white-space: nowrap;
+}
+.btn:hover { box-shadow: var(--shadow-1); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-primary { background: var(--color-primary); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--color-primary-dark); }
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-primary);
+  border: 1.5px solid var(--color-primary);
+}
+.btn-outline:hover { background: rgba(216, 64, 42, 0.06); }
+
+.btn-block { width: 100%; }
+
+.icon-btn {
+  width: 36px; height: 36px;
+  border-radius: var(--radius-full);
+  background: transparent;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-neutral-400);
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.icon-btn:hover { background: var(--color-neutral-100); color: var(--color-neutral-700); }
+
+/* =========================================================
+   TICKET CHIT (dal design system) — riusato per i tab
+   ========================================================= */
+.ticket-chit {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+
+/* =========================================================
+   AUTH PAGE LAYOUT
+   ========================================================= */
+.auth-page {
+  min-height: calc(100dvh - var(--header-height));
+  display: flex;
+}
+
+.auth-panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: var(--space-8) var(--space-4);
+}
+@media (min-width: 640px) {
+  .auth-panel { padding: var(--space-12) var(--space-8); }
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+}
+
+/* tab switcher styled like two torn order tickets */
+.auth-tabs {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+.auth-tab {
+  flex: 1;
+  background: var(--color-neutral-0);
+  border: 1.5px solid var(--color-neutral-200);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3) var(--space-2);
+  color: var(--color-neutral-400);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  text-align: center;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.auth-tab[aria-selected="true"] {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(216, 64, 42, 0.05);
+}
+
+.auth-card-inner {
+  background: var(--color-neutral-0);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-2);
+  padding: var(--space-8);
+  position: relative;
+}
+/* perforated edge at the top of the "ticket" */
+.auth-card-inner::before {
+  content: "";
+  position: absolute;
+  top: -1px; left: var(--space-4); right: var(--space-4);
+  height: 1px;
+  background-image: repeating-linear-gradient(
+    to right, var(--color-neutral-200) 0 6px, transparent 6px 12px
+  );
+}
+
+.auth-card-inner h2 {
+  font-size: 1.5rem;
+  margin-bottom: var(--space-1);
+}
+.auth-card-sub {
+  color: var(--color-neutral-400);
+  font-size: 0.9rem;
+  margin-bottom: var(--space-6);
+}
+
+.role-select {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-6);
+}
+.role-option {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  background: var(--color-neutral-100);
+  border: 1.5px solid var(--color-neutral-200);
+  border-radius: var(--radius-md);
+  padding: var(--space-3) var(--space-2);
+  text-align: center;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.role-option-icon { font-size: 1.2rem; }
+.role-option-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-neutral-700);
+}
+.role-option[aria-checked="true"] {
+  border-color: var(--color-primary);
+  background: rgba(216, 64, 42, 0.05);
+}
+.role-option[aria-checked="true"] .role-option-label { color: var(--color-primary); }
+
+.field-group { margin-bottom: var(--space-4); min-width: 0; }
+.field-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-3);
+}
+@media (max-width: 400px) {
+  .field-row { grid-template-columns: minmax(0, 1fr); }
+}
+
+.field-label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-neutral-700);
+  margin-bottom: var(--space-2);
+}
+
+.field-input-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background: var(--color-neutral-100);
+  border: 1.5px solid var(--color-neutral-200);
+  border-radius: var(--radius-md);
+  transition: border-color 0.15s ease;
+}
+.field-input-wrap:focus-within {
+  border-color: var(--color-primary);
+}
+.field-input-wrap.has-error {
+  border-color: var(--color-error);
+}
+.field-input-wrap input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: var(--space-3);
+  font-size: 0.95rem;
+  color: var(--color-neutral-900);
+  min-width: 0;
+}
+.field-input-wrap input::placeholder { color: var(--color-neutral-400); }
+.field-toggle-visibility {
+  margin-right: var(--space-1);
+  flex-shrink: 0;
+}
+
+.field-error {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: var(--space-2);
+  font-size: 0.8rem;
+  color: var(--color-error);
+}
+
+/* password strength — reuses the ticket-status color language */
+.strength-meter {
+  margin-top: var(--space-2);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.strength-bars {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+.strength-bar {
+  height: 4px;
+  flex: 1;
+  border-radius: var(--radius-full);
+  background: var(--color-neutral-200);
+  transition: background 0.15s ease;
+}
+.strength-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--color-neutral-400);
+  white-space: nowrap;
+}
+
+.field-inline-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-6);
+  font-size: 0.85rem;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-neutral-700);
+}
+.checkbox-row input[type="checkbox"] {
+  width: 16px; height: 16px;
+  accent-color: var(--color-primary);
+}
+.forgot-link {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+.forgot-link:hover { text-decoration: underline; }
+
+.auth-switch {
+  text-align: center;
+  margin-top: var(--space-6);
+  font-size: 0.9rem;
+  color: var(--color-neutral-700);
+}
+.auth-switch button {
+  background: none;
+  border: none;
+  color: var(--color-primary);
+  font-weight: 700;
+  padding: 0;
+}
+.auth-switch button:hover { text-decoration: underline; }
+
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,0.4);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+</style>
+</head>
+<body>
+
+
+
+<main class="auth-page" x-data="authPage('<%= mode %>')">
+
+  <section class="auth-panel">
+    <div class="auth-card">
+
+      <div class="auth-tabs" role="tablist" aria-label="Scegli accedi o registrati">
+        <button
+          type="button"
+          class="auth-tab"
+          role="tab"
+          :aria-selected="mode === 'login'"
+          @click="switchMode('login')">
+          Accedi
+        </button>
+        <button
+          type="button"
+          class="auth-tab"
+          role="tab"
+          :aria-selected="mode === 'signup'"
+          @click="switchMode('signup')">
+          Registrati
+        </button>
+      </div>
+
+      <div class="auth-card-inner">
+
+        <!-- ===================== LOGIN ===================== -->
+        <template x-if="mode === 'login'">
+          <div>
+            <h2>Bentornato</h2>
+            <p class="auth-card-sub">Accedi per continuare a ordinare.</p>
+
+            <form @submit.prevent="submitLogin" novalidate>
+              <div class="field-group">
+                <label class="field-label" for="login-email">Email</label>
+                <div class="field-input-wrap" :class="{ 'has-error': errors.loginEmail }">
+                  <input
+                    id="login-email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="nome@esempio.it"
+                    x-model="login.email"
+                    @input="errors.loginEmail = ''"
+                    :aria-invalid="!!errors.loginEmail">
+                </div>
+                <p class="field-error" x-show="errors.loginEmail" x-text="errors.loginEmail"></p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="login-password">Password</label>
+                <div class="field-input-wrap" :class="{ 'has-error': errors.loginPassword }">
+                  <input
+                    id="login-password"
+                    :type="showLoginPassword ? 'text' : 'password'"
+                    autocomplete="current-password"
+                    placeholder="••••••••"
+                    x-model="login.password"
+                    @input="errors.loginPassword = ''"
+                    :aria-invalid="!!errors.loginPassword">
+                  <button
+                    type="button"
+                    class="icon-btn field-toggle-visibility"
+                    @click="showLoginPassword = !showLoginPassword"
+                    :aria-label="showLoginPassword ? 'Nascondi password' : 'Mostra password'">
+                    <span x-text="showLoginPassword ? '🙈' : '👁️'" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <p class="field-error" x-show="errors.loginPassword" x-text="errors.loginPassword"></p>
+              </div>
+
+              <div class="field-inline-row">
+                <label class="checkbox-row">
+                  <input type="checkbox" x-model="login.remember">
+                  Ricordami
+                </label>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
+                <span x-show="loading" class="spinner" aria-hidden="true"></span>
+                <span x-text="loading ? 'Accesso in corso…' : 'Accedi'"></span>
+              </button>
+            </form>
+
+            <p class="auth-switch">
+              Non hai un account?
+              <button type="button" @click="switchMode('signup')">Registrati</button>
+            </p>
+          </div>
+        </template>
+
+        <!-- ===================== SIGNUP ===================== -->
+        <template x-if="mode === 'signup'">
+          <div>
+            <h2>Crea il tuo account</h2>
+            <p class="auth-card-sub">Bastano due minuti, poi si ordina.</p>
+
+            <form @submit.prevent="submitSignup" novalidate>
+              <div class="role-select" role="radiogroup" aria-label="Tipo di account">
+                <button
+                  type="button"
+                  class="role-option"
+                  role="radio"
+                  :aria-checked="signup.accountType === 'customer'"
+                  @click="signup.accountType = 'customer'">
+                  <span class="role-option-icon" aria-hidden="true">🍽️</span>
+                  <span class="role-option-label">Cliente</span>
+                </button>
+                <button
+                  type="button"
+                  class="role-option"
+                  role="radio"
+                  :aria-checked="signup.accountType === 'restaurant'"
+                  @click="signup.accountType = 'restaurant'">
+                  <span class="role-option-icon" aria-hidden="true">🧑‍🍳</span>
+                  <span class="role-option-label">Ristoratore</span>
+                </button>
+              </div>
+
+              <div class="field-row">
+                <div class="field-group">
+                  <label class="field-label" for="signup-firstname">Nome</label>
+                  <div class="field-input-wrap" :class="{ 'has-error': errors.firstName }">
+                    <input
+                      id="signup-firstname"
+                      type="text"
+                      autocomplete="given-name"
+                      placeholder="Mario"
+                      x-model="signup.firstName"
+                      @input="errors.firstName = ''"
+                      :aria-invalid="!!errors.firstName">
+                  </div>
+                  <p class="field-error" x-show="errors.firstName" x-text="errors.firstName"></p>
+                </div>
+                <div class="field-group">
+                  <label class="field-label" for="signup-lastname">Cognome</label>
+                  <div class="field-input-wrap" :class="{ 'has-error': errors.lastName }">
+                    <input
+                      id="signup-lastname"
+                      type="text"
+                      autocomplete="family-name"
+                      placeholder="Rossi"
+                      x-model="signup.lastName"
+                      @input="errors.lastName = ''"
+                      :aria-invalid="!!errors.lastName">
+                  </div>
+                  <p class="field-error" x-show="errors.lastName" x-text="errors.lastName"></p>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="signup-email">Email</label>
+                <div class="field-input-wrap" :class="{ 'has-error': errors.email }">
+                  <input
+                    id="signup-email"
+                    type="email"
+                    autocomplete="email"
+                    placeholder="nome@esempio.it"
+                    x-model="signup.email"
+                    @input="errors.email = ''"
+                    :aria-invalid="!!errors.email">
+                </div>
+                <p class="field-error" x-show="errors.email" x-text="errors.email"></p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="signup-password">Password</label>
+                <div class="field-input-wrap" :class="{ 'has-error': errors.password }">
+                  <input
+                    id="signup-password"
+                    :type="showSignupPassword ? 'text' : 'password'"
+                    autocomplete="new-password"
+                    placeholder="Minimo 8 caratteri"
+                    x-model="signup.password"
+                    @input="errors.password = ''"
+                    :aria-invalid="!!errors.password">
+                  <button
+                    type="button"
+                    class="icon-btn field-toggle-visibility"
+                    @click="showSignupPassword = !showSignupPassword"
+                    :aria-label="showSignupPassword ? 'Nascondi password' : 'Mostra password'">
+                    <span x-text="showSignupPassword ? '🙈' : '👁️'" aria-hidden="true"></span>
+                  </button>
+                </div>
+                <p class="field-error" x-show="errors.password" x-text="errors.password"></p>
+
+                <!-- password strength: same color language as .ticket-status -->
+                <div class="strength-meter" x-show="signup.password.length > 0">
+                  <div class="strength-bars">
+                    <div class="strength-bar" :style="strengthBarStyle(0)"></div>
+                    <div class="strength-bar" :style="strengthBarStyle(1)"></div>
+                    <div class="strength-bar" :style="strengthBarStyle(2)"></div>
+                  </div>
+                  <span class="strength-label" x-text="strengthLabel"></span>
+                </div>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label" for="signup-password-confirm">Conferma password</label>
+                <div class="field-input-wrap" :class="{ 'has-error': errors.passwordConfirm }">
+                  <input
+                    id="signup-password-confirm"
+                    type="password"
+                    autocomplete="new-password"
+                    placeholder="Ripeti la password"
+                    x-model="signup.passwordConfirm"
+                    @input="errors.passwordConfirm = ''"
+                    :aria-invalid="!!errors.passwordConfirm">
+                </div>
+                <p class="field-error" x-show="errors.passwordConfirm" x-text="errors.passwordConfirm"></p>
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
+                <span x-show="loading" class="spinner" aria-hidden="true"></span>
+                <span x-text="loading ? 'Creazione account…' : 'Crea account'"></span>
+              </button>
+            </form>
+
+            <p class="auth-switch">
+              Hai già un account?
+              <button type="button" @click="switchMode('login')">Accedi</button>
+            </p>
+          </div>
+        </template>
+
+      </div>
+    </div>
+  </section>
+</main>
+
+
+
+<script>
+
+function authPage(startingMode) {
+  return {
+    mode: startingMode,
+    loading: false,
+    showLoginPassword: false,
+    showSignupPassword: false,
+
+    login: { email: '', password: '', remember: false },
+    signup: {
+      accountType: 'customer',
+      firstName: '', lastName: '', email: '',
+      password: '', passwordConfirm: ''
+    },
+    errors: {},
+
+    switchMode(target) {
+      this.mode = target;
+      this.errors = {};
+    },
+
+    
+
+    isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    },
+
+    passwordScore(pw) {
+      let score = 0;
+      if (pw.length >= 8) score++;
+      if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) score++;
+      if (/\d/.test(pw) && /[^A-Za-z0-9]/.test(pw)) score++;
+      return score; // 0-3
+    },
+
+    get strengthLabel() {
+      const score = this.passwordScore(this.signup.password);
+      return ['Debole', 'Debole', 'Media', 'Forte'][score] || 'Debole';
+    },
+
+    strengthBarStyle(index) {
+      const score = this.passwordScore(this.signup.password);
+      const colors = ['var(--color-error)', 'var(--color-warning)', 'var(--color-success)'];
+      const active = index < Math.max(score, this.signup.password.length > 0 ? 1 : 0);
+      const colorIndex = Math.max(score - 1, 0);
+      return {
+        background: active ? colors[colorIndex] : 'var(--color-neutral-200)'
+      };
+    },
+
+    validateLogin() {
+      const errors = {};
+      if (!this.login.email) {
+        errors.loginEmail = 'Inserisci la tua email.';
+      } else if (!this.isValidEmail(this.login.email)) {
+        errors.loginEmail = 'Inserisci un indirizzo email valido.';
+      }
+      if (!this.login.password) {
+        errors.loginPassword = 'Inserisci la tua password.';
+      }
+      this.errors = errors;
+      return Object.keys(errors).length === 0;
+    },
+
+    validateSignup() {
+      const errors = {};
+      if (!this.signup.firstName.trim()) errors.firstName = 'Campo obbligatorio.';
+      if (!this.signup.lastName.trim()) errors.lastName = 'Campo obbligatorio.';
+
+      if (!this.signup.email) {
+        errors.email = 'Inserisci la tua email.';
+      } else if (!this.isValidEmail(this.signup.email)) {
+        errors.email = 'Inserisci un indirizzo email valido.';
+      }
+
+      if (!this.signup.password) {
+        errors.password = 'Scegli una password.';
+      } else if (this.signup.password.length < 8) {
+        errors.password = 'Almeno 8 caratteri.';
+      }
+
+      if (!this.signup.passwordConfirm) {
+        errors.passwordConfirm = 'Ripeti la password.';
+      } else if (this.signup.passwordConfirm !== this.signup.password) {
+        errors.passwordConfirm = 'Le password non coincidono.';
+      }
+
+      this.errors = errors;
+      return Object.keys(errors).length === 0;
+    },
+
+    submitLogin() {
+      if (!this.validateLogin()) return;
+      this.loading = true;
+
+      //TODO: inserire la fetch
+      setTimeout(() => {
+        this.loading = false;
+      }, 900);
+    },
+
+    submitSignup() {
+      if (!this.validateSignup()) return;
+      this.loading = true;
+      setTimeout(() => {
+        this.loading = false;
+        const roleLabel = this.signup.accountType === 'restaurant' ? 'ristoratore' : 'cliente';
+
+        //TODO: invece deve fare la fetch e rimandare alla schermata home
+        this.switchMode('login');
+      }, 900);
+    }
+  };
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,277 @@
+/* =========================================================
+   FASTFOOD — DESIGN TOKENS (variabili usate dall'header)
+   ========================================================= */
+:root {
+	--color-primary: #d8402a;
+	--color-primary-dark: #a82f1e;
+
+	--color-neutral-900: #211c1a;
+	--color-neutral-700: #4b4340;
+	--color-neutral-200: #e8e2dd;
+	--color-neutral-100: #f5f1ec;
+	--color-neutral-0: #ffffff;
+
+	--font-display: "Space Grotesk", "Cabinet Grotesk", sans-serif;
+	--font-body: "Inter", "General Sans", sans-serif;
+
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-6: 24px;
+	--space-8: 32px;
+
+	--radius-sm: 6px;
+	--radius-md: 12px;
+	--radius-full: 999px;
+
+	--shadow-1: 0 1px 2px rgba(33, 28, 26, 0.06);
+	--shadow-2: 0 4px 12px rgba(33, 28, 26, 0.1);
+
+	--header-height: 72px;
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+button {
+	font-family: inherit;
+	cursor: pointer;
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-accent, var(--color-primary));
+	outline-offset: 2px;
+}
+
+/* =========================================================
+   LAYOUT UTILITIES
+   ========================================================= */
+.container {
+	width: 100%;
+	max-width: 1200px;
+	margin-inline: auto;
+	padding-inline: var(--space-4);
+}
+@media (min-width: 768px) {
+	.container {
+		padding-inline: var(--space-8);
+	}
+}
+
+/* =========================================================
+   BUTTONS (usati in header-actions e mobile-nav)
+   ========================================================= */
+.btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	padding: var(--space-3) var(--space-6);
+	border-radius: var(--radius-md);
+	font-weight: 600;
+	font-size: 0.95rem;
+	border: none;
+	transition:
+		transform 0.15s ease,
+		box-shadow 0.15s ease,
+		background 0.15s ease;
+	white-space: nowrap;
+}
+.btn:hover {
+	box-shadow: var(--shadow-1);
+}
+.btn:active {
+	transform: translateY(1px);
+}
+
+.btn-primary {
+	background: var(--color-primary);
+	color: #fff;
+}
+.btn-primary:hover {
+	background: var(--color-primary-dark);
+}
+
+.btn-outline {
+	background: transparent;
+	color: var(--color-primary);
+	border: 1.5px solid var(--color-primary);
+}
+.btn-outline:hover {
+	background: rgba(216, 64, 42, 0.06);
+}
+
+.btn-sm {
+	padding: var(--space-2) var(--space-4);
+	font-size: 0.875rem;
+}
+
+.icon-btn {
+	width: 40px;
+	height: 40px;
+	border-radius: var(--radius-full);
+	background: var(--color-neutral-100);
+	border: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	transition: background 0.15s ease;
+}
+.icon-btn:hover {
+	background: var(--color-neutral-200);
+}
+
+/* =========================================================
+   HEADER / NAV
+   ========================================================= */
+.site-header {
+	position: sticky;
+	top: 0;
+	z-index: 100;
+	background: var(--color-neutral-0);
+	border-bottom: 1px solid var(--color-neutral-200);
+}
+.header-inner {
+	height: var(--header-height);
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-6);
+}
+
+.logo {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 1.25rem;
+	color: var(--color-neutral-900);
+}
+.logo-mark {
+	font-size: 1.4rem;
+}
+
+.main-nav {
+	display: none;
+	align-items: center;
+	gap: var(--space-6);
+	flex: 1;
+}
+.nav-link {
+	background: none;
+	border: none;
+	font-size: 0.95rem;
+	font-weight: 600;
+	color: var(--color-neutral-700);
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: var(--space-2) 0;
+}
+.nav-link:hover {
+	color: var(--color-primary);
+}
+
+.nav-dropdown {
+	position: relative;
+}
+.nav-dropdown-panel {
+	position: absolute;
+	top: calc(100% + var(--space-2));
+	left: 0;
+	background: var(--color-neutral-0);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-2);
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	min-width: 220px;
+	opacity: 0;
+	visibility: hidden;
+	transform: translateY(-4px);
+	transition:
+		opacity 0.15s ease,
+		transform 0.15s ease,
+		visibility 0.15s;
+}
+.nav-dropdown-panel.open {
+	opacity: 1;
+	visibility: visible;
+	transform: translateY(0);
+}
+.nav-dropdown-panel a {
+	padding: var(--space-2) var(--space-3);
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	color: var(--color-neutral-700);
+}
+.nav-dropdown-panel a:hover {
+	background: var(--color-neutral-100);
+	color: var(--color-primary);
+}
+
+.header-actions {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+}
+.hamburger {
+	display: inline-flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 4px;
+}
+.hamburger span {
+	width: 20px;
+	height: 2px;
+	background: var(--color-neutral-900);
+	border-radius: 2px;
+	transition:
+		transform 0.2s ease,
+		opacity 0.2s ease;
+}
+
+.mobile-nav {
+	display: flex;
+	flex-direction: column;
+	padding: var(--space-4);
+	gap: var(--space-1);
+	border-top: 1px solid var(--color-neutral-200);
+}
+.mobile-nav a {
+	padding: var(--space-3) var(--space-2);
+	font-weight: 600;
+	border-radius: var(--radius-sm);
+}
+.mobile-nav a:hover {
+	background: var(--color-neutral-100);
+}
+.mobile-nav hr {
+	border: none;
+	border-top: 1px solid var(--color-neutral-200);
+	margin: var(--space-2) 0;
+}
+.mobile-register {
+	text-align: center;
+}
+
+@media (min-width: 900px) {
+	.main-nav {
+		display: flex;
+	}
+	.header-actions .hamburger {
+		display: none;
+	}
+	.mobile-nav {
+		display: none !important;
+	}
+}
+@media (max-width: 899px) {
+	.header-actions .btn {
+		display: none;
+	}
+}

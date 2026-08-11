@@ -1,0 +1,46 @@
+<link rel="stylesheet" href="/css/header.css">
+
+
+<header class="site-header" id="site-header">
+  <div class="container header-inner">
+    <a href="" class="logo">
+      <span class="logo-mark" aria-hidden="true">🍔</span>
+      <span class="logo-text">FastFood</span>
+    </a>
+
+    <nav class="main-nav" id="main-nav" aria-label="Navigazione principale">
+      <a href="restaurants.html" class="nav-link">Ristoranti</a>
+      <div class="nav-dropdown">
+        <button class="nav-link nav-dropdown-trigger" aria-expanded="false" aria-controls="search-dropdown">
+          Cerca <span class="chevron" aria-hidden="true">▾</span>
+        </button>
+        <div class="nav-dropdown-panel" id="search-dropdown" role="menu">
+          <a href="dish-search.html" role="menuitem">Cerca piatti</a>
+          <a href="search-ingredient.html" role="menuitem">Cerca per ingrediente</a>
+          <a href="search-allergy.html" role="menuitem">Cerca senza allergeni</a>
+          <a href="search-by-dish.html" role="menuitem">Trova ristorante per piatto</a>
+        </div>
+      </div>
+    </nav>
+
+    <div class="header-actions">
+      <a href="login" class="btn btn-outline btn-sm">Accedi</a>
+      <a href="signup" class="btn btn-primary btn-sm">Registrati</a>
+      <button class="icon-btn hamburger" id="hamburger-btn" aria-label="Apri il menu" aria-expanded="false" aria-controls="mobile-nav">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile nav -->
+  <nav class="mobile-nav" id="mobile-nav" aria-label="Navigazione mobile" hidden>
+    <a href="restaurants.html">Ristoranti</a>
+    <a href="dish-search.html">Cerca piatti</a>
+    <a href="search-ingredient.html">Cerca per ingrediente</a>
+    <a href="search-allergy.html">Cerca senza allergeni</a>
+    <a href="search-by-dish.html">Trova ristorante per piatto</a>
+    <hr>
+    <a href="login">Accedi</a>
+    <a href="signup" class="btn btn-primary btn-sm mobile-register">Registrati</a>
+  </nav>
+</header>
