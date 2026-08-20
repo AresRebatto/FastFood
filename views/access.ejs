@@ -455,6 +455,7 @@ p { margin: 0; }
             <p class="auth-card-sub">Accedi per continuare a ordinare.</p>
 
             <form @submit.prevent="submitLogin" novalidate>
+            	<p class="field-error" x-show="formError" x-text="formError" style="margin-bottom: var(--space-4);"></p>
               <div class="field-group">
                 <label class="field-label" for="login-email">Email</label>
                 <div class="field-input-wrap" :class="{ 'has-error': errors.loginEmail }">
@@ -519,6 +520,7 @@ p { margin: 0; }
             <p class="auth-card-sub">Bastano due minuti, poi si ordina.</p>
 
             <form @submit.prevent="submitSignup" novalidate>
+            	<p class="field-error" x-show="formError" x-text="formError" style="margin-bottom: var(--space-4);"></p>
               <div class="role-select" role="radiogroup" aria-label="Tipo di account">
                 <button
                   type="button"
@@ -675,7 +677,7 @@ function authPage(startingMode) {
       this.errors = {};
     },
 
-    
+
 
     isValidEmail(value) {
       return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
@@ -745,27 +747,100 @@ function authPage(startingMode) {
       return Object.keys(errors).length === 0;
     },
 
-    submitLogin() {
+    async submitLogin() {
       if (!this.validateLogin()) return;
       this.loading = true;
+      this.formError = '';
 
-      //TODO: inserire la fetch
-      setTimeout(() => {
+      try {
+        const res = await fetch(`/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: this.login.email,
+            password: this.login.password
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+       	switch (res.status) {
+                case 401:
+                  this.formError = 'Email o password errati.';
+                  break;
+                case 500:
+                  this.formError = 'Errore del server. Riprova più tardi.';
+                  break;
+                default:
+                  this.formError = data.Error || 'Errore durante il login.';
+              }
+        	return;
+        }
+
+        window.location.href = '/';
+
+      } catch (err) {
+        console.error(err);
+        this.formError = 'Impossibile contattare il server. Riprova.';
+      } finally {
         this.loading = false;
-      }, 900);
+      }
     },
 
-    submitSignup() {
+    async submitSignup() {
       if (!this.validateSignup()) return;
       this.loading = true;
-      setTimeout(() => {
-        this.loading = false;
-        const roleLabel = this.signup.accountType === 'restaurant' ? 'ristoratore' : 'cliente';
+      this.formError = '';
 
-        //TODO: invece deve fare la fetch e rimandare alla schermata home
-        this.switchMode('login');
-      }, 900);
+      try {
+        const ruolo = this.signup.accountType === 'restaurant' ? 'R' : 'C';
+
+        const res = await fetch(`/signup`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: this.signup.email,
+            nome: this.signup.firstName,
+            cognome: this.signup.lastName,
+            password: this.signup.password,
+            ruolo: ruolo
+          })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+       	switch (res.status) {
+                case 400:
+                  // Manca un parametro o ruolo non valido - non dovrebbe succedere
+                  // se validateSignup() ha già fatto il suo lavoro, ma copriamo il caso
+                  this.formError = data.Error || 'Dati non validi. Controlla i campi.';
+                  break;
+                case 409:
+                  this.formError = 'Esiste già un account con questa email.';
+                  // Bonus UX: porta subito al login precompilando l'email
+                  this.errors.email = 'Email già registrata.';
+                  break;
+                case 500:
+                  this.formError = 'Errore del server. Riprova più tardi.';
+                  break;
+                default:
+                  this.formError = data.Error || 'Errore durante la registrazione.';
+              }
+          return;
+        }
+
+        window.location.href = '/';
+
+      } catch (err) {
+        console.error(err);
+        this.formError = 'Impossibile contattare il server. Riprova.';
+      } finally {
+        this.loading = false;
+      }
     }
+
   };
 }
 </script>

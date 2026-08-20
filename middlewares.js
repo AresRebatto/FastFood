@@ -42,22 +42,26 @@ function VERIFY(req, res, next) {
 	next();
 }
 
-//TODO: ricordati il middleware per la verifica di JWT
+
 function verifyJWT(req, res, next) {
 	try {
+		let token = null;
+
 		const authHeader = req.headers.authorization;
-		if (!authHeader || !authHeader.startsWith("Bearer ")) {
-			return next();
+
+		//Non usa i cookie perché testo con apidog
+		if (authHeader && authHeader.startsWith("Bearer ")) {
+			token = authHeader.split(" ")[1];
+		} else if (req.cookies && req.cookies.token) {
+			token = req.cookies.token;
 		}
 
-		const token = authHeader.split(" ")[1];
 		if (!token) {
 			return next();
 		}
 
 		const decoded = jwt.verify(token, process.env.JWT_SECRET);
 		req.user = decoded;
-
 		next();
 	} catch (err) {
 		if (err.name === "TokenExpiredError" || err.name === "JsonWebTokenError") {

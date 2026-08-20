@@ -1,6 +1,3 @@
-/* =========================================================
-   FASTFOOD — DESIGN TOKENS (variabili usate dall'header)
-   ========================================================= */
 :root {
 	--color-primary: #d8402a;
 	--color-primary-dark: #a82f1e;
@@ -38,6 +35,8 @@ a {
 button {
 	font-family: inherit;
 	cursor: pointer;
+	background: none;
+	border: none;
 }
 
 :focus-visible {
@@ -61,7 +60,7 @@ button {
 }
 
 /* =========================================================
-   BUTTONS (usati in header-actions e mobile-nav)
+   BUTTONS
    ========================================================= */
 .btn {
 	display: inline-flex;
@@ -108,6 +107,10 @@ button {
 	font-size: 0.875rem;
 }
 
+.btn-block {
+	width: 100%;
+}
+
 .icon-btn {
 	width: 40px;
 	height: 40px;
@@ -124,7 +127,7 @@ button {
 }
 
 /* =========================================================
-   HEADER / NAV
+   HEADER
    ========================================================= */
 .site-header {
 	position: sticky;
@@ -138,7 +141,7 @@ button {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	gap: var(--space-6);
+	gap: var(--space-4);
 }
 
 .logo {
@@ -149,68 +152,10 @@ button {
 	font-weight: 700;
 	font-size: 1.25rem;
 	color: var(--color-neutral-900);
+	flex-shrink: 0;
 }
 .logo-mark {
 	font-size: 1.4rem;
-}
-
-.main-nav {
-	display: none;
-	align-items: center;
-	gap: var(--space-6);
-	flex: 1;
-}
-.nav-link {
-	background: none;
-	border: none;
-	font-size: 0.95rem;
-	font-weight: 600;
-	color: var(--color-neutral-700);
-	display: inline-flex;
-	align-items: center;
-	gap: 4px;
-	padding: var(--space-2) 0;
-}
-.nav-link:hover {
-	color: var(--color-primary);
-}
-
-.nav-dropdown {
-	position: relative;
-}
-.nav-dropdown-panel {
-	position: absolute;
-	top: calc(100% + var(--space-2));
-	left: 0;
-	background: var(--color-neutral-0);
-	border-radius: var(--radius-md);
-	box-shadow: var(--shadow-2);
-	padding: var(--space-2);
-	display: flex;
-	flex-direction: column;
-	min-width: 220px;
-	opacity: 0;
-	visibility: hidden;
-	transform: translateY(-4px);
-	transition:
-		opacity 0.15s ease,
-		transform 0.15s ease,
-		visibility 0.15s;
-}
-.nav-dropdown-panel.open {
-	opacity: 1;
-	visibility: visible;
-	transform: translateY(0);
-}
-.nav-dropdown-panel a {
-	padding: var(--space-2) var(--space-3);
-	border-radius: var(--radius-sm);
-	font-size: 0.9rem;
-	color: var(--color-neutral-700);
-}
-.nav-dropdown-panel a:hover {
-	background: var(--color-neutral-100);
-	color: var(--color-primary);
 }
 
 .header-actions {
@@ -218,6 +163,72 @@ button {
 	align-items: center;
 	gap: var(--space-3);
 }
+
+/* =========================================================
+   USER MENU (dropdown profilo, sostituisce accedi/registrati da loggati)
+   ========================================================= */
+.user-menu {
+	position: relative;
+}
+.user-menu-trigger {
+	gap: var(--space-2);
+	padding-inline: var(--space-3);
+	width: auto;
+}
+.user-menu-avatar {
+	width: 28px;
+	height: 28px;
+	border-radius: var(--radius-full);
+	background: var(--color-primary);
+	color: #fff;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-display);
+	font-weight: 700;
+	font-size: 0.8rem;
+	flex-shrink: 0;
+}
+.user-menu-panel {
+	position: absolute;
+	top: calc(100% + var(--space-2));
+	right: 0;
+	background: var(--color-neutral-0);
+	border-radius: var(--radius-md);
+	box-shadow: var(--shadow-2);
+	padding: var(--space-2);
+	display: flex;
+	flex-direction: column;
+	min-width: 220px;
+	z-index: 200;
+}
+.user-menu-panel a,
+.user-menu-panel button {
+	padding: var(--space-3);
+	border-radius: var(--radius-sm);
+	font-size: 0.9rem;
+	font-weight: 500;
+	color: var(--color-neutral-700);
+	text-align: left;
+	width: 100%;
+}
+.user-menu-panel a:hover,
+.user-menu-panel button:hover {
+	background: var(--color-neutral-100);
+	color: var(--color-primary);
+}
+.user-menu-panel hr {
+	border: none;
+	border-top: 1px solid var(--color-neutral-200);
+	margin: var(--space-2) 0;
+}
+.user-menu-panel .logout-item {
+	color: var(--color-primary);
+}
+
+/* =========================================================
+   HAMBURGER + MOBILE NAV
+   ========================================================= */
 .hamburger {
 	display: inline-flex;
 	flex-direction: column;
@@ -234,36 +245,58 @@ button {
 		transform 0.2s ease,
 		opacity 0.2s ease;
 }
+.hamburger[aria-expanded="true"] span:nth-child(1) {
+	transform: translateY(6px) rotate(45deg);
+}
+.hamburger[aria-expanded="true"] span:nth-child(2) {
+	opacity: 0;
+}
+.hamburger[aria-expanded="true"] span:nth-child(3) {
+	transform: translateY(-6px) rotate(-45deg);
+}
 
 .mobile-nav {
 	display: flex;
 	flex-direction: column;
 	padding: var(--space-4);
-	gap: var(--space-1);
+	gap: var(--space-2);
 	border-top: 1px solid var(--color-neutral-200);
 }
-.mobile-nav a {
-	padding: var(--space-3) var(--space-2);
+.mobile-nav .btn {
+	width: 100%;
+}
+.mobile-nav-user {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	padding: var(--space-2) var(--space-2) var(--space-3);
+	margin-bottom: var(--space-1);
+	border-bottom: 1px solid var(--color-neutral-200);
+}
+.mobile-nav-user-name {
+	font-weight: 600;
+	color: var(--color-neutral-900);
+}
+.mobile-nav a,
+.mobile-nav button {
+	padding: var(--space-3);
 	font-weight: 600;
 	border-radius: var(--radius-sm);
+	text-align: left;
+	width: 100%;
+	font-size: 0.95rem;
+	color: var(--color-neutral-700);
 }
-.mobile-nav a:hover {
+.mobile-nav a:hover,
+.mobile-nav button:hover {
 	background: var(--color-neutral-100);
 }
-.mobile-nav hr {
-	border: none;
-	border-top: 1px solid var(--color-neutral-200);
-	margin: var(--space-2) 0;
-}
-.mobile-register {
-	text-align: center;
+.mobile-nav .logout-item {
+	color: var(--color-primary);
 }
 
 @media (min-width: 900px) {
-	.main-nav {
-		display: flex;
-	}
-	.header-actions .hamburger {
+	.hamburger {
 		display: none;
 	}
 	.mobile-nav {
@@ -271,7 +304,12 @@ button {
 	}
 }
 @media (max-width: 899px) {
-	.header-actions .btn {
+	.header-actions > .btn,
+	.header-actions > .user-menu {
 		display: none;
 	}
+}
+
+[x-cloak] {
+	display: none !important;
 }
