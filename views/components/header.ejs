@@ -1,6 +1,5 @@
 <link rel="stylesheet" href="/css/header.css">
 
-
 <header class="site-header" id="site-header" x-data="{ userMenuOpen: false, mobileNavOpen: false }" @click.outside="userMenuOpen = false">
   <div class="container header-inner">
     <a href="/" class="logo">
@@ -33,7 +32,7 @@
               <a href="/pagamento" role="menuitem">Metodi di pagamento</a>
             <% } %>
             <hr>
-            <button type="button" class="logout-item" @click="$root.$refs && null" onclick="document.getElementById('logout-form').submit()" role="menuitem">Esci</button>
+            <button type="button" class="logout-item"  onclick="document.getElementById('logout-form').submit()" role="menuitem">Esci</button>
           </div>
         </div>
       <% } else { %>

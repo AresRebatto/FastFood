@@ -127,6 +127,20 @@ app.post("/signup", middlewares.validateCredentials, async (req, res) => {
 	}
 });
 
+app.post("/logout", middlewares.verifyJWT, (req, res) => {
+	if (!req.user) {
+		return res.redirect("/");
+	}
+
+	res.clearCookie("token", {
+		httpOnly: true,
+		secure: false, // stesso valore usato in res.cookie(...) al login/signup
+		sameSite: "lax",
+	});
+
+	res.redirect("/");
+});
+
 // Middleware di fallback per il 404
 app.use((req, res, next) => {
 	res.status(404).render("not_found");

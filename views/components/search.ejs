@@ -1,0 +1,63 @@
+<link rel="stylesheet" href="/css/search_bar.css">
+
+<!-- components/search-bar.ejs -->
+<section
+  class="search-hero"
+  x-data="searchHero()"
+  x-init="init()"
+>
+  <div class="search-hero__inner">
+    <span class="search-hero__eyebrow">Cosa ti va di mangiare oggi?</span>
+
+    <form class="search-bar" role="search" @submit.prevent="submit()" :class="{ 'is-focused': focused }">
+
+      <!-- Select Tipo di Ricerca -->
+      <div class="search-bar__select-wrapper">
+        <select
+          class="search-bar__select"
+          x-model="type"
+          @change="onTypeChange()"
+          aria-label="Seleziona tipo di ricerca"
+        >
+          <option value="dishes">🍕 Piatti</option>
+          <option value="restaurants">🏪 Ristoranti</option>
+        </select>
+        <svg class="search-bar__select-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+
+      <span class="search-bar__divider" aria-hidden="true"></span>
+
+      <!-- Icona di Ricerca -->
+      <svg class="search-bar__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/>
+        <path d="M20 20L16.6 16.6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+
+      <!-- Input di Testo -->
+      <input
+        type="text"
+        class="search-bar__input"
+        x-ref="input"
+        x-model="query"
+        :placeholder="placeholder"
+        @focus="focused = true"
+        @blur="focused = false"
+        aria-label="Cerca"
+        autocomplete="off"
+      />
+
+
+
+      <!-- Botone Submit -->
+      <button type="submit" class="btn btn-primary search-bar__submit-btn" aria-label="Cerca">
+      	&rarr;
+      </button>
+    </form>
+
+
+  </div>
+</section>
+
+<script src="/js/search_bar.js"></script>
