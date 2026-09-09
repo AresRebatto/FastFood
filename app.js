@@ -89,13 +89,13 @@ let db;
 					.status(500)
 					.json({ Error: "Non e' stato possibile connettersi al DB" });
 			}
-			
+
 			const user = userServices.findUserByEmail(db, email);
-			
+
 			if (!user) {
 				return res.status(401).json({ Error: "Credenziali non valide" });
 			}
-			
+
 			const passwordValida = await utils.verifyPassword(password, user.password);
 			if (!passwordValida) {
 				return res.status(401).json({ Error: "Credenziali non valide" });
@@ -103,7 +103,7 @@ let db;
 			const token = utils.generateToken(user._id, user.email, user.ruolo);
 
 			cookieUtils.setAuthCookie(res, token);
-		
+
 
 			res.status(200).json({ ok: true });
 		} catch (err) {
@@ -130,13 +130,13 @@ let db;
 					.status(500)
 					.json({ Error: "Non e' stato possibile connettersi al DB" });
 			}
-			
+
 			const user = userServices.findUserByEmail(db, email);
-			
+
 			if (!user) {
 				return res.status(409).json({ Error: "Email già registrata" });
 			}
-			
+
 			const result = await userServices.createUser(db, {
         email,
         nome,
@@ -144,7 +144,7 @@ let db;
         password,
         ruolo
       });
-			
+
 			const token = utils.generateToken(result.insertedId, email, ruolo);
 			cookieUtils.setAuthCookie(res, token);
 
@@ -162,7 +162,7 @@ let db;
 
 		cookieUtils.clearAuthCookie(res);
 		res.redirect("/");
-		
+
 	});
 
 	app.post("/modifica-dati", middlewares.verifyJWT, async (req, res) => {
@@ -178,8 +178,8 @@ let db;
 				.json({ Error: "Non sei autorizzato. Credenziali non valide" });
 		}
 
-		const user = userServices.findUserByEmail(db, email);
-		
+		const user = userServices.findUserByEmail(db, req.user.email);
+
 		if (!user) {
 			return res.status(401).json({ Error: "Utente non trovato" });
 		}
@@ -222,15 +222,51 @@ let db;
 		}
 
 		try {
-			
+
 			await userServices.updateUserByEmail(db, req.user.email, aggiornamenti);
 			return res.status(200).json({ Success: "Dati aggiornati con successo" });
-			
+
 		} catch (errore) {
 			return res.status(500).json({ Error: "Errore durante l'aggiornamento dei dati" });
 		}
 	});
-	// Middleware di fallback per il 404
+
+app.delete("/cancella-profilo", middlewares.verifyJWT, async (req, res) => {
+	if (db === null) {
+		return res
+			.status(500)
+			.json({ Error: "Non e' stato possibile connettersi al DB" });
+	}
+
+	if (!req.user) {
+		return res
+			.status(401)
+			.json({ Error: "Non sei autorizzato. Credenziali non valide" });
+	}
+
+	const user = userServices.findUserByEmail(db, req.user.email);
+
+	if (!user) {
+		return res.status(401).json({ Error: "Utente non trovato" });
+	}
+
+	try {
+			const cancellato = await userServices.deleteUserByEmail(db, req.user.email);
+
+			if (!cancellato) {
+				return res.status(500).json({ Error: "Non e' stato possibile cancellare l'utente" });
+			}
+		} catch (errore) {
+			return res.status(500).json({ Error: "Errore durante la cancellazione del profilo" });
+		}
+
+	cookieUtils.clearAuthCookie(res);
+
+	res.status(200).json({ok: true})
+	res.redirect("/");
+});
+
+// Middleware di fallback per il 404
 	app.use((req, res, next) => {
 		res.status(404).render("not_found");
 	});

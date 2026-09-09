@@ -46,8 +46,15 @@ async function updateUserByEmail(db, email, aggiornamenti) {
     );
 }
 
+async function deleteUserByEmail(db, email) {
+	const users = db.collection("Utente");
+	const risultato = await users.deleteOne({ email });
+	return risultato.deletedCount > 0;
+}	
+
 module.exports = {
-    findUserByEmail,
-    createUser,
-    updateUserByEmail
+  findUserByEmail,
+  createUser,
+	updateUserByEmail,
+	deleteUserByEmail
 };
