@@ -192,6 +192,13 @@
 
 	<!-- ===================== BARRA AZIONI ===================== -->
 	<div class="profile-actions">
+		<button
+			type="button"
+			class="btn btn-danger-outline"
+			@click="mostraConfermaEliminazione = true">
+			Elimina profilo
+		</button>
+
 		<p class="profile-actions-hint" x-show="modificato && !formValido" x-cloak>
 			Correggi i campi evidenziati prima di applicare le modifiche.
 		</p>
@@ -205,10 +212,49 @@
 		</button>
 	</div>
 
+	<!-- ===================== MODAL CONFERMA ELIMINAZIONE ===================== -->
+	<div
+		class="modal-backdrop"
+		x-show="mostraConfermaEliminazione"
+		x-cloak
+		x-transition.opacity
+		@keydown.escape.window="mostraConfermaEliminazione = false">
+
+		<div
+			class="modal-box"
+			@click.outside="mostraConfermaEliminazione = false"
+			role="dialog"
+			aria-labelledby="titolo-modal-eliminazione"
+			aria-modal="true">
+
+			<h3 id="titolo-modal-eliminazione" class="modal-title">Elimina profilo</h3>
+			<p class="modal-description">
+				Sei sicuro di voler eliminare il tuo profilo? Questa azione è irreversibile e cancellerà permanentemente tutti i tuoi dati.
+			</p>
+
+			<div class="modal-actions">
+				<button
+					type="button"
+					class="btn btn-outline"
+					@click="mostraConfermaEliminazione = false"
+					:disabled="eliminazioneInCorso">
+					Annulla
+				</button>
+				<button
+					type="button"
+					class="btn btn-danger"
+					@click="eliminaProfilo()"
+					:disabled="eliminazioneInCorso">
+					<span x-show="!eliminazioneInCorso">Sì, elimina</span>
+					<span x-show="eliminazioneInCorso" x-cloak>Eliminazione…</span>
+				</button>
+			</div>
+		</div>
+	</div>
 </main>
 
 <script>
-	function profiloPage() {
+function profiloPage() {
 		return {
 			// Stato dati personali
 			nome: '',
@@ -226,8 +272,10 @@
 			carte: [],
 			carteOriginali: '[]',
 
-			// Stato invio
+			// Stato invio ed eliminazione
 			invioInCorso: false,
+			mostraConfermaEliminazione: false,
+			eliminazioneInCorso: false,
 			messaggioSuccesso: '',
 			messaggioErrore: '',
 
@@ -430,6 +478,32 @@
 					this.messaggioErrore = 'Non è stato possibile applicare le modifiche. Riprova.';
 				} finally {
 					this.invioInCorso = false;
+				}
+			},
+
+			// ---------- Eliminazione Profilo ----------
+			async eliminaProfilo() {
+				if (this.eliminazioneInCorso) return;
+
+				this.eliminazioneInCorso = true;
+				this.messaggioErrore = '';
+				this.messaggioSuccesso = '';
+
+				try {
+					const risposta = await fetch('/cancella-profilo', {
+						method: 'DELETE',
+						headers: { 'Content-Type': 'application/json' }
+					});
+
+					if (!risposta.ok) throw new Error('Cancellazione non riuscita');
+
+					// Redireziona alla home o alla pagina di login a cancellazione avvenuta
+					window.location.href = '/';
+				} catch (errore) {
+					this.messaggioErrore = 'Impossibile eliminare il profilo al momento. Riprova più tardi.';
+					this.mostraConfermaEliminazione = false;
+				} finally {
+					this.eliminazioneInCorso = false;
 				}
 			}
 		};
