@@ -1,0 +1,437 @@
+<link rel="stylesheet" href="/css/global.css">
+<link rel="stylesheet" href="/css/profile.css">
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+<main class="container profile-page" x-data="profiloPage()" x-init="init()">
+
+	<script id="dati-profilo-iniziali" type="application/json">
+		{
+			"nome": <%- JSON.stringify(nome) %>,
+			"cognome": <%- JSON.stringify(cognome) %>,
+			"metodiPagamento": <%- JSON.stringify(metodi_pagamento || []) %>
+		}
+	</script>
+
+	<div class="profile-intro">
+		<h1 class="profile-title">Il tuo profilo</h1>
+		<p class="profile-subtitle">Gestisci i tuoi dati personali, la password e i metodi di pagamento.</p>
+	</div>
+
+	<!-- Messaggi di stato invio -->
+	<div class="alert alert-success" x-show="messaggioSuccesso" x-cloak x-transition role="status">
+		<span x-text="messaggioSuccesso"></span>
+	</div>
+	<div class="alert alert-error" x-show="messaggioErrore" x-cloak x-transition role="alert">
+		<span x-text="messaggioErrore"></span>
+	</div>
+
+	<!-- ===================== DATI PERSONALI ===================== -->
+	<section class="profile-card">
+		<h2 class="profile-card-title">Dati personali</h2>
+		<div class="field-grid">
+			<div class="field-group">
+				<label for="campo-nome">Nome</label>
+				<input
+					type="text"
+					id="campo-nome"
+					name="nome"
+					x-model="nome"
+					autocomplete="given-name">
+			</div>
+			<div class="field-group">
+				<label for="campo-cognome">Cognome</label>
+				<input
+					type="text"
+					id="campo-cognome"
+					name="cognome"
+					x-model="cognome"
+					autocomplete="family-name">
+			</div>
+		</div>
+	</section>
+
+	<!-- ===================== PASSWORD ===================== -->
+	<section class="profile-card">
+		<div class="profile-card-header">
+			<h2 class="profile-card-title">Password</h2>
+			<button
+				type="button"
+				class="btn btn-outline btn-sm"
+				@click="mostraCampiPassword = !mostraCampiPassword">
+				<span x-text="mostraCampiPassword ? 'Annulla' : 'Cambia password'"></span>
+			</button>
+		</div>
+
+		<div class="field-grid" x-show="mostraCampiPassword" x-cloak x-transition>
+			<div class="field-group">
+				<label for="campo-nuova-password">Nuova password</label>
+				<div class="input-with-action">
+					<input
+						:type="passwordVisibile ? 'text' : 'password'"
+						id="campo-nuova-password"
+						name="nuova_password"
+						x-model="nuovaPassword"
+						autocomplete="new-password"
+						:aria-invalid="nuovaPassword.length > 0 && nuovaPassword.length < 8">
+					<button
+						type="button"
+						class="icon-btn icon-btn-sm"
+						@click="passwordVisibile = !passwordVisibile"
+						:aria-label="passwordVisibile ? 'Nascondi password' : 'Mostra password'">
+						<span x-text="passwordVisibile ? '🙈' : '👁️'" aria-hidden="true"></span>
+					</button>
+				</div>
+				<p class="field-hint" x-show="nuovaPassword.length > 0 && nuovaPassword.length < 8" x-cloak>
+					La password deve contenere almeno 8 caratteri.
+				</p>
+			</div>
+			<div class="field-group">
+				<label for="campo-conferma-password">Conferma nuova password</label>
+				<input
+					:type="passwordVisibile ? 'text' : 'password'"
+					id="campo-conferma-password"
+					name="conferma_password"
+					x-model="confermaPassword"
+					autocomplete="new-password"
+					:aria-invalid="confermaPassword.length > 0 && confermaPassword !== nuovaPassword">
+				<p class="field-hint field-hint-error" x-show="confermaPassword.length > 0 && confermaPassword !== nuovaPassword" x-cloak>
+					Le due password non coincidono.
+				</p>
+			</div>
+		</div>
+	</section>
+
+	<!-- ===================== METODI DI PAGAMENTO ===================== -->
+	<section class="profile-card">
+		<div class="profile-card-header">
+			<h2 class="profile-card-title">Metodi di pagamento</h2>
+			<button type="button" class="btn btn-outline btn-sm" @click="aggiungiCarta()">
+				+ Aggiungi carta
+			</button>
+		</div>
+
+		<!-- Stato vuoto -->
+		<div class="empty-state" x-show="carte.length === 0" x-cloak>
+			<span class="empty-state-icon" aria-hidden="true">💳</span>
+			<p>Non hai ancora nessun metodo di pagamento salvato.</p>
+			<button type="button" class="btn btn-primary btn-sm" @click="aggiungiCarta()">
+				Aggiungi la tua prima carta
+			</button>
+		</div>
+
+		<!-- Lista carte -->
+		<template x-for="carta in carte" :key="carta._chiave">
+			<div class="card-item">
+				<div class="card-item-header">
+					<span
+						class="badge-circuito"
+						:class="{ 'badge-circuito-errore': circuito(carta.numero_carta) === 'sconosciuto' }"
+						x-text="etichettaCircuito(carta.numero_carta) || 'Nuova carta'">
+					</span>
+					<button
+						type="button"
+						class="icon-btn icon-btn-sm"
+						@click="rimuoviCarta(carta._chiave)"
+						aria-label="Rimuovi carta">
+						<span aria-hidden="true">🗑️</span>
+					</button>
+				</div>
+
+				<div class="field-grid field-grid-carta">
+					<div class="field-group field-group-numero">
+						<label :for="'numero-' + carta._chiave">Numero carta</label>
+						<input
+							type="text"
+							inputmode="numeric"
+							:id="'numero-' + carta._chiave"
+							x-model="carta.numero_carta"
+							@input="formattaNumeroCarta(carta)"
+							placeholder="Solo cifre, max 16"
+							:aria-invalid="!!carta.errori.numero">
+						<p class="field-hint field-hint-error" x-show="carta.errori.numero" x-text="carta.errori.numero" x-cloak></p>
+					</div>
+
+					<div class="field-group">
+						<label :for="'scadenza-' + carta._chiave">Scadenza</label>
+						<input
+							type="text"
+							inputmode="numeric"
+							:id="'scadenza-' + carta._chiave"
+							x-model="carta.scadenza"
+							@input="formattaScadenza(carta)"
+							placeholder="MM/AA"
+							:aria-invalid="!!carta.errori.scadenza">
+						<p class="field-hint field-hint-error" x-show="carta.errori.scadenza" x-text="carta.errori.scadenza" x-cloak></p>
+					</div>
+
+					<div class="field-group">
+						<label :for="'cvv-' + carta._chiave">CVV</label>
+						<div class="input-with-action">
+							<input
+								:type="carta.cvvVisibile ? 'text' : 'password'"
+								inputmode="numeric"
+								:id="'cvv-' + carta._chiave"
+								x-model="carta.cvv"
+								@input="formattaCvv(carta)"
+								:placeholder="circuito(carta.numero_carta) === 'amex' ? '4 cifre' : '3 cifre'"
+								:aria-invalid="!!carta.errori.cvv">
+							<button
+								type="button"
+								class="icon-btn icon-btn-sm"
+								@click="toggleCvv(carta._chiave)"
+								:aria-label="carta.cvvVisibile ? 'Nascondi CVV' : 'Mostra CVV'">
+								<span x-text="carta.cvvVisibile ? '🙈' : '👁️'" aria-hidden="true"></span>
+							</button>
+						</div>
+						<p class="field-hint field-hint-error" x-show="carta.errori.cvv" x-text="carta.errori.cvv" x-cloak></p>
+					</div>
+				</div>
+			</div>
+		</template>
+	</section>
+
+	<!-- ===================== BARRA AZIONI ===================== -->
+	<div class="profile-actions">
+		<p class="profile-actions-hint" x-show="modificato && !formValido" x-cloak>
+			Correggi i campi evidenziati prima di applicare le modifiche.
+		</p>
+		<button
+			type="button"
+			class="btn btn-primary"
+			:disabled="!modificato || !formValido || invioInCorso"
+			@click="inviaModifiche()">
+			<span x-show="!invioInCorso">Applica modifiche</span>
+			<span x-show="invioInCorso" x-cloak>Applico le modifiche…</span>
+		</button>
+	</div>
+
+</main>
+
+<script>
+	function profiloPage() {
+		return {
+			// Stato dati personali
+			nome: '',
+			cognome: '',
+			nomeOriginale: '',
+			cognomeOriginale: '',
+
+			// Stato password
+			mostraCampiPassword: false,
+			passwordVisibile: false,
+			nuovaPassword: '',
+			confermaPassword: '',
+
+			// Stato carte
+			carte: [],
+			carteOriginali: '[]',
+
+			// Stato invio
+			invioInCorso: false,
+			messaggioSuccesso: '',
+			messaggioErrore: '',
+
+			init() {
+				const dati = JSON.parse(document.getElementById('dati-profilo-iniziali').textContent);
+
+				this.nome = dati.nome || '';
+				this.cognome = dati.cognome || '';
+				this.nomeOriginale = this.nome;
+				this.cognomeOriginale = this.cognome;
+
+				this.carte = (dati.metodiPagamento || []).map(c => this.normalizzaCarta(c));
+				this.carteOriginali = JSON.stringify(this.carte.map(c => this.datiConfrontabiliCarta(c)));
+
+				this.carte.forEach(c => this.validaCarta(c));
+			},
+
+			normalizzaCarta(carta) {
+				return {
+					id: carta.id ?? null,
+					_chiave: carta.id ? `db-${carta.id}` : `nuova-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+					numero_carta: carta.numero_carta || '',
+					scadenza: carta.scadenza || '',
+					cvv: carta.cvv || '',
+					cvvVisibile: false,
+					errori: {}
+				};
+			},
+
+			datiConfrontabiliCarta(carta) {
+				return {
+					id: carta.id,
+					numero_carta: carta.numero_carta,
+					scadenza: carta.scadenza,
+					cvv: carta.cvv
+				};
+			},
+
+			// ---------- Circuito carta ----------
+			circuito(numero) {
+				if (!numero) return null;
+				const primaCifra = numero.charAt(0);
+				if (primaCifra === '3') return 'amex';
+				if (primaCifra === '4' || primaCifra === '5') return 'visa-mc';
+				return 'sconosciuto';
+			},
+
+			etichettaCircuito(numero) {
+				const circuito = this.circuito(numero);
+				if (circuito === 'amex') return 'American Express';
+				if (circuito === 'visa-mc') return numero.charAt(0) === '4' ? 'Visa' : 'Mastercard';
+				if (circuito === 'sconosciuto') return 'Circuito non supportato';
+				return '';
+			},
+
+			// ---------- Formattazione input ----------
+			formattaNumeroCarta(carta) {
+				carta.numero_carta = (carta.numero_carta || '').replace(/\D/g, '').slice(0, 16);
+				this.validaCarta(carta);
+			},
+
+			formattaScadenza(carta) {
+				let valore = (carta.scadenza || '').replace(/\D/g, '').slice(0, 4);
+				if (valore.length >= 3) {
+					valore = valore.slice(0, 2) + '/' + valore.slice(2);
+				}
+				carta.scadenza = valore;
+				this.validaCarta(carta);
+			},
+
+			formattaCvv(carta) {
+				const lunghezzaMax = this.circuito(carta.numero_carta) === 'amex' ? 4 : 3;
+				carta.cvv = (carta.cvv || '').replace(/\D/g, '').slice(0, lunghezzaMax);
+				this.validaCarta(carta);
+			},
+
+			// ---------- Validazione carta ----------
+			validaCarta(carta) {
+				const errori = {};
+				const numero = carta.numero_carta || '';
+				const scadenza = carta.scadenza || '';
+				const cvv = carta.cvv || '';
+				const circuito = this.circuito(numero);
+
+				if (!numero) {
+					errori.numero = 'Inserisci il numero della carta.';
+				} else if (!/^\d+$/.test(numero)) {
+					errori.numero = 'Il numero della carta deve contenere solo cifre.';
+				} else if (circuito === 'sconosciuto') {
+					errori.numero = 'Circuito non supportato: sono accettate solo Visa, Mastercard e American Express.';
+				} else if (circuito === 'amex' && numero.length !== 15) {
+					errori.numero = 'Le carte American Express hanno 15 cifre.';
+				} else if (circuito === 'visa-mc' && numero.length !== 16) {
+					errori.numero = 'Visa e Mastercard hanno 16 cifre.';
+				}
+
+				if (!scadenza) {
+					errori.scadenza = 'Inserisci la scadenza.';
+				} else if (!/^\d{2}\/\d{2}$/.test(scadenza)) {
+					errori.scadenza = 'Formato non valido, usa MM/AA.';
+				} else {
+					const [mese, anno] = scadenza.split('/').map(Number);
+					const oggi = new Date();
+					const annoCorrente = oggi.getFullYear() % 100;
+					const meseCorrente = oggi.getMonth() + 1;
+					if (mese < 1 || mese > 12) {
+						errori.scadenza = 'Il mese inserito non è valido.';
+					} else if (anno < annoCorrente || (anno === annoCorrente && mese < meseCorrente)) {
+						errori.scadenza = 'La carta risulta scaduta.';
+					}
+				}
+
+				if (!cvv) {
+					errori.cvv = 'Inserisci il CVV.';
+				} else {
+					const lunghezzaAttesa = circuito === 'amex' ? 4 : 3;
+					if (!/^\d+$/.test(cvv) || cvv.length !== lunghezzaAttesa) {
+						errori.cvv = `Il CVV deve avere ${lunghezzaAttesa} cifre per questo circuito.`;
+					}
+				}
+
+				carta.errori = errori;
+				return Object.keys(errori).length === 0;
+			},
+
+			// ---------- Gestione lista carte ----------
+			aggiungiCarta() {
+				this.carte.push(this.normalizzaCarta({}));
+			},
+
+			rimuoviCarta(chiave) {
+				this.carte = this.carte.filter(c => c._chiave !== chiave);
+			},
+
+			toggleCvv(chiave) {
+				const carta = this.carte.find(c => c._chiave === chiave);
+				if (carta) carta.cvvVisibile = !carta.cvvVisibile;
+			},
+
+			// ---------- Stato complessivo del form ----------
+			get carteConfrontabili() {
+				return this.carte.map(c => this.datiConfrontabiliCarta(c));
+			},
+
+			get modificato() {
+				const nomeCambiato = this.nome !== this.nomeOriginale;
+				const cognomeCambiato = this.cognome !== this.cognomeOriginale;
+				const passwordCambiata = this.nuovaPassword.length > 0;
+				const carteCambiate = JSON.stringify(this.carteConfrontabili) !== this.carteOriginali;
+				return nomeCambiato || cognomeCambiato || passwordCambiata || carteCambiate;
+			},
+
+			get passwordValida() {
+				if (!this.nuovaPassword && !this.confermaPassword) return true;
+				if (this.nuovaPassword.length < 8) return false;
+				return this.nuovaPassword === this.confermaPassword;
+			},
+
+			get carteValide() {
+				return this.carte.every(c => this.validaCarta(c));
+			},
+
+			get formValido() {
+				return this.passwordValida && this.carteValide;
+			},
+
+			async inviaModifiche() {
+				if (!this.modificato || !this.formValido || this.invioInCorso) return;
+
+				this.invioInCorso = true;
+				this.messaggioErrore = '';
+				this.messaggioSuccesso = '';
+
+				const corpo = {
+					nome: this.nome,
+					cognome: this.cognome,
+					metodi_pagamento: this.carteConfrontabili
+				};
+				if (this.nuovaPassword) {
+					corpo.password = this.nuovaPassword;
+				}
+
+				try {
+					const risposta = await fetch('/modifica-dati', {
+						method: 'POST',
+						headers: { 'Content-Type': 'application/json' },
+						body: JSON.stringify(corpo)
+					});
+
+					if (!risposta.ok) throw new Error('Richiesta non riuscita');
+
+					this.nomeOriginale = this.nome;
+					this.cognomeOriginale = this.cognome;
+					this.carteOriginali = JSON.stringify(this.carteConfrontabili);
+					this.nuovaPassword = '';
+					this.confermaPassword = '';
+					this.mostraCampiPassword = false;
+					this.messaggioSuccesso = 'Modifiche applicate con successo.';
+				} catch (errore) {
+					this.messaggioErrore = 'Non è stato possibile applicare le modifiche. Riprova.';
+				} finally {
+					this.invioInCorso = false;
+				}
+			}
+		};
+	}
+</script>

@@ -12,9 +12,9 @@ const uri = process.env.URI;
 const client = new MongoClient(uri);
 let db;
 
-// const roleMap = new Map(
-// 	["chiave", "valore"]
-// )
+// const roleMap = {
+// 	"role": ["page1"]
+// }
 
 app.set("view engine", "ejs");
 app.use(express.static("public"));
@@ -45,6 +45,38 @@ app.get("/signup", middlewares.verifyJWT, (req, res) => {
 	} else {
 		res.render("access", { mode: "signup" });
 	}
+});
+
+app.get("/profilo", middlewares.verifyJWT, async (req, res) => {
+	if (req.user) {
+		try {
+			if (db === null) {
+				return res
+					.status(500)
+					.json({ Error: "Non e' stato possibile connettersi al DB" });
+			}
+			const users = db.collection("Utente");
+			const user = await users.findOne({ email: req.user.email });
+
+			if (user) {
+				res.render(
+					"profile",
+					{
+						nome: user.nome,
+						cognome: user.cognome,
+						metodi_pagamento: user.metodi_pagamento
+					});
+			} else {
+				//TODO problema di sicurezza in cui utente è entrato con JWT falso
+			}
+		} catch (err) {
+			console.error(err);
+			res.status(500).json({ Error: "Errore interno" });
+		}
+	} else {
+		res.render("not_found");
+	}
+
 });
 
 app.post("/login", middlewares.validateCredentials, async (req, res) => {
@@ -109,7 +141,8 @@ app.post("/signup", middlewares.validateCredentials, async (req, res) => {
 			cognome: cognome,
 			password: await utils.hashPwd(password),
 			ruolo: ruolo,
-			metodo_pagamento: null,
+			metodi_pagamento: [],
+			ordini: []
 		});
 		const token = utils.generateToken(result.insertedId, email, ruolo);
 
@@ -141,6 +174,66 @@ app.post("/logout", middlewares.verifyJWT, (req, res) => {
 	res.redirect("/");
 });
 
+app.post("/modifica-dati", middlewares.verifyJWT, async (req, res) => {
+	if (db === null) {
+		return res
+			.status(500)
+			.json({ Error: "Non e' stato possibile connettersi al DB" });
+	}
+
+	const users = db.collection("Utente");
+	const user = await users.findOne({ email: req.user.email });
+	if (user === null) {
+		return res.status(401).json({ Error: "Utente non trovato" });
+	}
+
+	const { nome, cognome, password, metodi_pagamento } = req.body;
+
+	const aggiornamenti = {};
+
+	if (typeof nome === "string" && nome.trim().length > 0) {aggiornamenti.nome = nome.trim();}
+
+	if (typeof cognome === "string" && cognome.trim().length > 0) {aggiornamenti.cognome = cognome.trim();}
+
+	if (typeof password === "string" && password.length > 0) {
+		if (password.length < 8) {
+			return res.status(400).json({ Error: "La password deve contenere almeno 8 caratteri" });
+		}
+		aggiornamenti.password = await utils.hashPwd(password);
+	}
+
+	if (metodi_pagamento !== undefined) {
+		if (!Array.isArray(metodi_pagamento)) {
+			return res.status(400).json({ Error: "Formato dei metodi di pagamento non valido" });
+		}
+
+		for (const carta of metodi_pagamento) {
+			if (!utils.validaMetodoPagamento(carta)) {
+				return res.status(400).json({ Error: "Uno o più metodi di pagamento non sono validi" });
+			}
+		}
+
+		aggiornamenti.metodi_pagamento = metodi_pagamento.map((carta) => ({
+			numero_carta: carta.numero_carta,
+			scadenza: carta.scadenza,
+			cvv: carta.cvv,
+		}));
+	}
+
+	if (Object.keys(aggiornamenti).length === 0) {
+		return res.status(400).json({ Error: "Nessun dato da aggiornare" });
+	}
+
+	try {
+		await users.updateOne(
+			{ email: req.user.email },
+			{ $set: aggiornamenti }
+		);
+		return res.status(200).json({ Success: "Dati aggiornati con successo" });
+	} catch (errore) {
+		return res.status(500).json({ Error: "Errore durante l'aggiornamento dei dati" });
+	}
+});
 // Middleware di fallback per il 404
 app.use((req, res, next) => {
 	res.status(404).render("not_found");
