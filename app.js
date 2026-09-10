@@ -146,6 +146,7 @@ app.get("/search-result/:kind", middlewares.verifyJWT, async (req, res) => {
   try {
 
 		const results = await restaurantServices.searchByKind(db, kind, q);
+		console.log(results);
 		res.render('search-results', {
 			results,
 			searchKind: kind,

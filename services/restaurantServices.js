@@ -14,8 +14,6 @@ async function findRestaurantsByRistoratoreId(db, ristoratoreId) {
     searchId = new ObjectId(ristoratoreId);
 }
 
-
-  // Cerchiamo sia con l'ObjectId formattato che con il valore stringa originale
 	const findedRestaurant = await restaurants.find({
 		$or: [
 			{ ristoratore_id: searchId },
@@ -155,11 +153,12 @@ async function deleteRistorante(db, ristoranteId, userId) {
 }
 
 async function searchByKind(db, kind, q) {
-  const queryRegex = new RegExp(q.trim(), 'i');
+	const queryRegex = new RegExp(q.trim(), 'i');
+	console.log(queryRegex);
   const collection = db.collection("Ristorante");
   const DISTANZA_MOCK = 2.5; // Distanza cablata per ora
 
-  if (kind === 'restaurant') {
+  if (kind === 'restaurants') {
       // Cerca ristoranti per nome o via
       const ristoranti = await collection.find({
           $or: [
@@ -178,7 +177,7 @@ async function searchByKind(db, kind, q) {
       }));
   }
 
-  if (kind === 'plate') {
+  if (kind === 'dishes') {
       // Cerca i ristoranti che contengono il piatto cercato nel menu
     const ristoranti = await collection.find({
         menu: {
@@ -215,7 +214,7 @@ async function searchByKind(db, kind, q) {
                   strMealThumb: piatto.strMealThumb
               });
           }
-      }
+		}
 
       return risultatiPiatti;
   }
