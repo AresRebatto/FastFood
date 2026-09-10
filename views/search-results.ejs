@@ -292,20 +292,29 @@
   <%- include('components/header') %>
 
   <section class="search-bar-sticky">
-    <form action="/cerca" method="GET" class="search-bar-compact">
-      <select name="tipo" class="search-select">
-        <option value="ristoranti" <%= searchKind === 'ristoranti' ? 'selected' : '' %>>Ristoranti</option>
-        <option value="piatti" <%= searchKind === 'piatti' ? 'selected' : '' %>>Piatti</option>
-      </select>
-      <input
-        type="text"
-        name="q"
-        value="<%= query || '' %>"
-        placeholder="<%= searchKind === 'piatti' ? 'Cerca un piatto...' : 'Cerca un ristorante...' %>"
-        class="search-input"
-      />
-      <button type="submit" class="search-btn">Cerca</button>
-    </form>
+	  <form
+	    id="searchForm"
+	    action="#"
+	    onsubmit="handleSearch(event)"
+	    class="search-bar-compact"
+	  >
+	    <select name="tipo" id="searchKind" class="search-select" onchange="updatePlaceholder(this.value)">
+	      <!-- Aggiornati i valori con i nomi per il percorso URL -->
+	      <option value="restaurants" <%= searchKind === 'restaurants' || searchKind === 'ristoranti' ? 'selected' : '' %>>Ristoranti</option>
+	      <option value="dishes" <%= searchKind === 'dishes' || searchKind === 'piatti' ? 'selected' : '' %>>Piatti</option>
+	    </select>
+
+	    <input
+	      type="text"
+	      id="searchInput"
+	      name="q"
+	      value="<%= query || '' %>"
+	      placeholder="<%= (searchKind === 'dishes' || searchKind === 'piatti') ? 'Cerca un piatto...' : 'Cerca un ristorante...' %>"
+	      class="search-input"
+	    />
+
+	    <button type="submit" class="search-btn">Cerca</button>
+	  </form>
   </section>
 
   <main class="results-page" x-data="cartToast()">
@@ -459,6 +468,25 @@
           setTimeout(() => (this.toastVisible = false), 2000);
         }
       };
+    }
+
+    function handleSearch(event) {
+        event.preventDefault();
+
+        const kind = document.getElementById('searchKind').value; // Restituisce 'restaurants' o 'dishes'
+        const query = document.getElementById('searchInput').value.trim();
+
+        if (!query) return;
+
+        const params = new URLSearchParams({ q: query });
+
+        // Costruisce l'URL parametrizzato: /search-result/restaurants?q=Trattoria o /search-result/dishes?q=pizza
+        window.location.href = `/search-result/${kind}?${params.toString()}`;
+      }
+
+    function updatePlaceholder(kind) {
+      const input = document.getElementById('searchInput');
+      input.placeholder = kind === 'dishes' ? 'Cerca un piatto...' : 'Cerca un ristorante...';
     }
   </script>
 </body>
