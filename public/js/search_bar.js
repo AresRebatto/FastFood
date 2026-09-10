@@ -69,15 +69,14 @@ function searchHero() {
 
 
 
-    submit() {
-      if (!this.query.trim()) return;
+	  submit() {
+	    if (!this.query.trim()) return;
 
-      const params = new URLSearchParams({
-        q: this.query.trim(),
-        type: this.type
-      });
+	    const params = new URLSearchParams({
+	      q: this.query.trim()
+	    });
 
-      window.location.href = `/cerca?${params.toString()}`;
-    }
+	    window.location.href = `/search-result/${this.type}?${params.toString()}`;
+	  }
   };
 }

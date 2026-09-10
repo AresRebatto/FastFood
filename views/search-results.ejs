@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Risultati della ricerca</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="/css/global.css">
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    :root {
+      --color-primary: #D8402A;
+      --color-primary-dark: #A82F1E;
+      --color-secondary: #1F3D2B;
+      --color-accent: #F2A93B;
+      --color-success: #3A7D44;
+      --color-warning: #C97A0E;
+      --color-error: #B3261E;
+      --color-info: #2B6CB0;
+
+      --color-neutral-900: #211C1A;
+      --color-neutral-700: #4B4340;
+      --color-neutral-400: #8C8380;
+      --color-neutral-200: #E8E2DD;
+      --color-neutral-100: #F5F1EC;
+      --color-neutral-0: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', sans-serif;
+      background-color: var(--color-neutral-100);
+      color: var(--color-neutral-900);
+    }
+
+    /* ===== SEARCH BAR ===== */
+    .search-bar-sticky {
+      background: var(--color-neutral-900);
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--color-neutral-700);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .search-bar-compact {
+      max-width: 700px;
+      margin: 0 auto;
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .search-select,
+    .search-input {
+      font-family: 'Inter', sans-serif;
+      border: 1px solid var(--color-neutral-700);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      background: var(--color-neutral-900);
+      color: var(--color-neutral-100);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .search-input { flex: 1; }
+
+    .search-select {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--color-neutral-100);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23F5F1EC' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.75rem center;
+      padding-right: 2.2rem;
+    }
+
+    .search-select option {
+      background: var(--color-neutral-900);
+      color: var(--color-neutral-100);
+    }
+
+    .search-select:focus,
+    .search-input:focus {
+      border-color: var(--color-neutral-400);
+    }
+
+    .search-btn {
+      background: var(--color-primary);
+      color: var(--color-neutral-0);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      padding: 0.6rem 1.4rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .search-btn:hover { background: var(--color-primary-dark); }
+
+    /* ===== RISULTATI ===== */
+    .results-page {
+      padding: 2rem 1.5rem 4rem;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .results-header h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      color: var(--color-neutral-900);
+      margin-bottom: 1.5rem;
+    }
+
+    .no-results {
+      text-align: center;
+      color: var(--color-neutral-400);
+      padding: 3rem 0;
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+
+    /* ===== CARD ===== */
+    .card {
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(33, 28, 26, 0.05);
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 6px 16px rgba(33, 28, 26, 0.08);
+    }
+
+    .card-img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+    }
+
+    .card-body {
+      padding: 1rem 1.2rem;
+      flex: 1;
+    }
+
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.1rem;
+      color: var(--color-neutral-900);
+      margin: 0.3rem 0;
+    }
+
+    .card-via {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.85rem;
+      color: var(--color-neutral-400);
+      margin: 0;
+    }
+
+    .badge-distanza,
+    .badge-categoria {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      background: var(--color-neutral-200);
+      color: var(--color-neutral-700);
+      padding: 0.15rem 0.5rem;
+      border-radius: 20px;
+      display: inline-block;
+    }
+
+    .card-ristorante-info {
+      margin-top: 0.6rem;
+      padding-top: 0.6rem;
+      border-top: 1px dashed var(--color-neutral-200);
+    }
+
+    .card-nome-ristorante {
+      font-weight: 600;
+      color: var(--color-neutral-900);
+      margin: 0;
+      font-size: 0.9rem;
+    }
+
+    .card-actions {
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.6rem;
+    }
+
+    .qty-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--color-neutral-100);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 8px;
+      padding: 0.2rem 0.5rem;
+    }
+
+    .qty-btn {
+      background: none;
+      border: none;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--color-neutral-700);
+      cursor: pointer;
+      width: 24px;
+    }
+
+    .qty-value {
+      font-family: 'IBM Plex Mono', monospace;
+      min-width: 20px;
+      text-align: center;
+      color: var(--color-neutral-900);
+    }
+
+    .btn-ordina {
+      flex: 1;
+      background: var(--color-primary);
+      color: var(--color-neutral-0);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      border: none;
+      border-radius: 8px;
+      padding: 0.55rem 1rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+    .btn-ordina:hover { background: var(--color-primary-dark); }
+    .btn-ordina--added { background: var(--color-success); color: var(--color-neutral-0); }
+
+    .btn-espandi {
+      display: block;
+      text-align: center;
+      padding: 0.7rem;
+      background: var(--color-secondary);
+      color: var(--color-neutral-0);
+      text-decoration: none;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      transition: background 0.2s ease;
+    }
+    .btn-espandi:hover { background: var(--color-neutral-900); }
+    .btn-espandi--ghost {
+      background: transparent;
+      color: var(--color-secondary);
+      border-top: 1px solid var(--color-neutral-200);
+    }
+    .btn-espandi--ghost:hover {
+      background: var(--color-neutral-100);
+    }
+
+    .cart-toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: var(--color-neutral-900);
+      color: var(--color-neutral-100);
+      padding: 0.8rem 1.2rem;
+      border-radius: 10px;
+      border: 1px solid var(--color-neutral-700);
+      font-family: 'Inter', sans-serif;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.2);
+      z-index: 999;
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('components/header') %>
+
+  <section class="search-bar-sticky">
+    <form action="/cerca" method="GET" class="search-bar-compact">
+      <select name="tipo" class="search-select">
+        <option value="ristoranti" <%= searchKind === 'ristoranti' ? 'selected' : '' %>>Ristoranti</option>
+        <option value="piatti" <%= searchKind === 'piatti' ? 'selected' : '' %>>Piatti</option>
+      </select>
+      <input
+        type="text"
+        name="q"
+        value="<%= query || '' %>"
+        placeholder="<%= searchKind === 'piatti' ? 'Cerca un piatto...' : 'Cerca un ristorante...' %>"
+        class="search-input"
+      />
+      <button type="submit" class="search-btn">Cerca</button>
+    </form>
+  </section>
+
+  <main class="results-page" x-data="cartToast()">
+
+    <div class="results-header">
+      <h2><%= results.length %> risultat<%= results.length === 1 ? 'o' : 'i' %> per "<%= query %>"</h2>
+    </div>
+
+    <% if (!results || results.length === 0) { %>
+      <div class="no-results">
+        <p>Nessun risultato trovato. Prova con un'altra ricerca.</p>
+      </div>
+    <% } else { %>
+      <div class="results-grid">
+
+        <% results.forEach(function(item) { %>
+
+          <% if (item.kind === 'ristorante') { %>
+
+            <!-- ===== CARD RISTORANTE ===== -->
+            <div class="card card-ristorante">
+              <div class="card-body">
+                <h3 class="card-title"><%= item.nome %></h3>
+                <p class="card-via"><%= item.via %></p>
+                <span class="badge-distanza"><%= item.distanza_km %> km</span>
+              </div>
+              <a href="/ristorante/<%= item.id %>" class="btn-espandi">
+                Espandi
+              </a>
+            </div>
+
+          <% } else { %>
+
+            <!-- ===== CARD PIATTO ===== -->
+            <div
+              class="card card-piatto"
+              x-data="{ qty: 1, item: <%- JSON.stringify(item) %>, added: false }"
+            >
+              <img
+                src="<%= item.strMealThumb %>"
+                alt="<%= item.strMeal %>"
+                class="card-img"
+              />
+              <div class="card-body">
+                <span class="badge-categoria"><%= item.strCategory %></span>
+                <h3 class="card-title"><%= item.strMeal %></h3>
+
+                <div class="card-ristorante-info">
+                  <p class="card-nome-ristorante"><%= item.nome %></p>
+                  <p class="card-via"><%= item.via %> · <%= item.distanza_km %> km</p>
+                </div>
+
+                <div class="card-actions">
+                  <div class="qty-selector">
+                    <button
+                      type="button"
+                      @click="qty > 1 && qty--"
+                      class="qty-btn"
+                    >−</button>
+                    <span class="qty-value" x-text="qty"></span>
+                    <button
+                      type="button"
+                      @click="qty++"
+                      class="qty-btn"
+                    >+</button>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="btn-ordina"
+                    :class="{ 'btn-ordina--added': added }"
+                    @click="
+                      $store.cart.addItem(item, qty);
+                      added = true;
+                      showToast(item.strMeal);
+                      setTimeout(() => added = false, 1200);
+                    "
+                  >
+                    <span x-show="!added">Ordina</span>
+                    <span x-show="added">Aggiunto ✓</span>
+                  </button>
+                </div>
+              </div>
+
+              <a href="/ristorante/<%= item.id %>" class="btn-espandi btn-espandi--ghost">
+                Vedi locale
+              </a>
+            </div>
+
+          <% } %>
+
+        <% }) %>
+
+      </div>
+    <% } %>
+
+    <!-- Toast di conferma aggiunta al carrello -->
+    <div
+      x-show="toastVisible"
+      x-transition
+      class="cart-toast"
+      x-text="toastMessage"
+      style="display: none;"
+    ></div>
+
+  </main>
+
+  <%- include('components/footer') %>
+
+  <script>
+    document.addEventListener('alpine:init', () => {
+      Alpine.store('cart', {
+        items: JSON.parse(localStorage.getItem('cart') || '[]'),
+
+        addItem(item, qty) {
+          const existing = this.items.find(
+            (i) => i.idMeal === item.idMeal && i.id === item.id
+          );
+          if (existing) {
+            existing.qty += qty;
+          } else {
+            this.items.push({ ...item, qty });
+          }
+          this._persist();
+        },
+
+        removeItem(idMeal, id) {
+          this.items = this.items.filter(
+            (i) => !(i.idMeal === idMeal && i.id === id)
+          );
+          this._persist();
+        },
+
+        _persist() {
+          localStorage.setItem('cart', JSON.stringify(this.items));
+        },
+
+        get totalItems() {
+          return this.items.reduce((sum, i) => sum + i.qty, 0);
+        }
+      });
+    });
+
+    function cartToast() {
+      return {
+        toastVisible: false,
+        toastMessage: '',
+        showToast(nomePiatto) {
+          this.toastMessage = `${nomePiatto} aggiunto al carrello`;
+          this.toastVisible = true;
+          setTimeout(() => (this.toastVisible = false), 2000);
+        }
+      };
+    }
+  </script>
+</body>
+</html>

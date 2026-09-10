@@ -120,6 +120,48 @@ app.get("/gestione-ristoranti", middlewares.verifyJWT, async (req, res) => {
 
 });
 
+app.get("/search-result/:kind", middlewares.verifyJWT, async (req, res) => {
+
+	if (db === null) {
+    return res
+        .status(500)
+        .json({ Error: "Non e' stato possibile connettersi al DB" });
+  }
+
+  const { kind } = req.params;
+  const { q } = req.query;
+
+  if (kind !== 'restaurants' && kind !== 'dishes') {
+    return res.status(400).json({
+        message: "Parametro ':kind' nell'URL non valido. Valori ammessi: 'restaurant' o 'plate'."
+    });
+  }
+
+  if (!q || typeof q !== 'string' || q.trim() === '') {
+    return res.status(400).json({
+      message: "La query string 'q' è obbligatoria per effettuare la ricerca (es. ?q=nome)."
+    });
+  }
+
+  try {
+
+		const results = await restaurantServices.searchByKind(db, kind, q);
+		res.render('search-results', {
+			results,
+			searchKind: kind,
+			query: q,
+			role: req.user.ruolo
+		})
+  } catch (err) {
+    console.error("Errore durante la ricerca:", err.message);
+    return res.status(500).json({
+      message: "Errore interno del server durante la ricerca."
+    });
+  }
+});
+
+
+
 app.post("/login", middlewares.validateCredentials, async (req, res) => {
 	try {
 		const { email, password } = req.body;
@@ -335,24 +377,87 @@ app.post("/add-ristorante", middlewares.verifyJWT, async (req, res) => {
           .json({ message: err.message || "Errore del server durante l'inserimento." });
   }
 });
+
+app.put("/edit-ristoranti/:id", middlewares.verifyJWT, async (req, res) => {
+  if (db === null) {
+    return res
+        .status(500)
+        .json({ Error: "Non e' stato possibile connettersi al DB" });
+  }
+
+  if (!req.user || req.user.ruolo !== 'R') {
+    return res
+        .status(401)
+        .json({ Error: "Non sei autorizzato ad accedere" });
+  }
+
+  try {
+    const userId = req.user.sub;
+    const ristoranteId = req.params.id;
+
+    const ristoranteAggiornato = await restaurantServices.updateRistorante(db, ristoranteId, userId, req.body);
+
+    return res.status(200).json(ristoranteAggiornato);
+  } catch (err) {
+    console.error("Errore aggiornamento ristorante:", err.message);
+    const statusCode = err.statusCode || 500;
+
+    return res
+        .status(statusCode)
+        .json({ message: err.message || "Errore durante l'aggiornamento del ristorante." });
+  }
+});
+
+app.delete("/ristoranti/:id", middlewares.verifyJWT, async (req, res) => {
+  if (db === null) {
+    return res
+        .status(500)
+        .json({ Error: "Non e' stato possibile connettersi al DB" });
+  }
+
+  if (!req.user || req.user.ruolo !== 'R') {
+    return res
+        .status(401)
+        .json({ Error: "Non sei autorizzato ad accedere" });
+  }
+
+  try {
+    const userId = req.user.sub;
+    const ristoranteId = req.params.id;
+
+    const result = await restaurantServices.deleteRistorante(db, ristoranteId, userId);
+
+    return res.status(200).json(result);
+  } catch (err) {
+    console.error("Errore eliminazione ristorante:", err.message);
+    const statusCode = err.statusCode || 500;
+
+    return res
+        .status(statusCode)
+        .json({ message: err.message || "Errore durante l'eliminazione del ristorante." });
+  }
+});
+
+
+
 // Middleware di fallback per il 404
-	app.use((req, res, next) => {
-		res.status(404).render("not_found");
-	});
+app.use((req, res, next) => {
+	res.status(404).render("not_found");
+});
 
-	async function start() {
-		await client.connect();
+async function start() {
+	await client.connect();
 
-		const result = await client.db("FastFood").command({ ping: 1 });
-		if (result.ok === 1) {
-			db = client.db("FastFood");
-		} else {
-			db = null;
-		}
-
-		app.listen(port, () => {
-			console.log(`In ascolto sulla porta ${port}`);
-		});
+	const result = await client.db("FastFood").command({ ping: 1 });
+	if (result.ok === 1) {
+		db = client.db("FastFood");
+	} else {
+		db = null;
 	}
+
+	app.listen(port, () => {
+		console.log(`In ascolto sulla porta ${port}`);
+	});
+}
 
 	start();
