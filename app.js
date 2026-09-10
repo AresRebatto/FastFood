@@ -102,10 +102,9 @@ app.get("/gestione-ristoranti", middlewares.verifyJWT, async (req, res) => {
 	}
 	try {
 
-		const restaurants = restaurantServices.findRestaurantsByRistoratoreId(db, req.user.id);
+		const restaurants = await restaurantServices.findRestaurantsByRistoratoreId(db, req.user.sub);
 		const meals = await mealServices.getAvailableMealsLocal();
 
-		
 
 			res.render("gestione-ristoranti",
 		{
@@ -306,6 +305,36 @@ app.delete("/cancella-profilo", middlewares.verifyJWT, async (req, res) => {
 	res.redirect("/");
 });
 
+app.post("/add-ristorante", middlewares.verifyJWT, async (req, res) => {
+	if (db === null) {
+		return res
+			.status(500)
+			.json({ Error: "Non e' stato possibile connettersi al DB" });
+	}
+
+	if (!req.user || req.user.ruolo != 'R') {
+		return res
+			.status(401)
+			.json({ Error: "Non sei autorizzato ad accedere" });
+	}
+
+	try {
+    const userId = req.user.sub;
+    const ristoranteCreato = await restaurantServices.addRistorante(db, userId, req.body);
+
+
+    return res.status(201).json(ristoranteCreato);
+  } catch (err) {
+      console.error("Errore aggiunta ristorante:", err.message);
+
+
+      const statusCode = err.statusCode || 500;
+
+      return res
+          .status(statusCode)
+          .json({ message: err.message || "Errore del server durante l'inserimento." });
+  }
+});
 // Middleware di fallback per il 404
 	app.use((req, res, next) => {
 		res.status(404).render("not_found");

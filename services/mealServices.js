@@ -8,6 +8,7 @@ async function getAvailableMealsLocal() {
   const rawData = await fs.readFile(filePath, "utf-8");
   const parsedData = JSON.parse(rawData);
 
+
   return parsedData.map(piatto => ({
     idMeal: piatto.idMeal,
     strMeal: piatto.strMeal,

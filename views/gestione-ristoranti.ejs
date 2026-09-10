@@ -505,7 +505,6 @@
 
   </main>
 
-  <!-- Passaggio sicuro dei dati EJS tramite tag script JSON -->
   <script id="ejs-meals-data" type="application/json"><%- JSON.stringify(meals || []) %></script>
   <script id="ejs-ristoranti-data" type="application/json"><%- JSON.stringify(ristoranti || []) %></script>
 
@@ -606,7 +605,7 @@
 
           this.saving = true;
           const isEdit = !!this.editingId;
-          const url = isEdit ? `/api/ristoranti/${this.editingId}` : '/api/ristoranti';
+          const url = isEdit ? `/edit-ristoranti/${this.editingId}` : '/add-ristorante';
           const method = isEdit ? 'PUT' : 'POST';
 
           try {
@@ -622,18 +621,10 @@
               throw new Error(data.message || 'Salvataggio non riuscito.');
             }
 
-            const saved = await res.json();
-
-            if (isEdit) {
-              this.ristoranti = this.ristoranti.map(r => r._id === saved._id ? saved : r);
-            } else {
-              this.ristoranti.push(saved);
-            }
-
-            this.panelOpen = false;
+            // Ricarica la pagina per risincronizzare tutto tramite SSR
+            window.location.reload();
           } catch (err) {
             this.formError = err.message || 'Errore di rete.';
-          } finally {
             this.saving = false;
           }
         },
@@ -651,16 +642,16 @@
           if (!id) return;
 
           try {
-            const res = await fetch(`/api/ristoranti/${id}`, {
+            const res = await fetch(`/ristoranti/${id}`, {
               method: 'DELETE',
               credentials: 'include'
             });
             if (!res.ok) throw new Error('Eliminazione non riuscita.');
 
-            this.ristoranti = this.ristoranti.filter(r => r._id !== id);
+            // Ricarica la pagina per risincronizzare la lista dal backend
+            window.location.reload();
           } catch (err) {
             this.error = err.message || 'Errore di rete.';
-          } finally {
             this.confirmingDeleteId = null;
           }
         }
