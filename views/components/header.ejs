@@ -24,7 +24,7 @@
           <div class="user-menu-panel" x-show="userMenuOpen" x-cloak x-transition role="menu">
             <% if (role === 'R') { %>
               <a href="/profilo" role="menuitem">Il mio profilo</a>
-              <a href="/ristorante" role="menuitem">Gestisci ristorante</a>
+              <a href="/gestione-ristoranti" role="menuitem">Gestisci ristoranti</a>
               <a href="/ordini-ricevuti" role="menuitem">Ordini ricevuti</a>
             <% } else { %>
               <a href="/profilo" role="menuitem">Il mio profilo</a>
@@ -61,7 +61,7 @@
       </div>
       <% if (role === 'R') { %>
         <a href="/profilo">Il mio profilo</a>
-        <a href="/ristorante">Gestisci ristorante</a>
+        <a href="/gestione-ristoranti">Gestisci ristoranti</a>
         <a href="/ordini-ricevuti">Ordini ricevuti</a>
       <% } else { %>
         <a href="/profilo">Il mio profilo</a>

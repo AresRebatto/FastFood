@@ -14,22 +14,22 @@ async function findUserByEmail(db, email) {
 }
 
 async function createUser(db, { email, nome, cognome, password, ruolo }) {
-    const users = db.collection("Utente");
+  const users = db.collection("Utente");
 
-    // Cifratura della password tramite utility
-    const hashedPassword = await utils.hashPwd(password);
+  // Cifratura della password tramite utility
+  const hashedPassword = await utils.hashPwd(password);
 
-    const nuovoUtente = {
-        email: email.trim().toLowerCase(),
-        nome: nome.trim(),
-        cognome: cognome.trim(),
-        password: hashedPassword,
-        ruolo: ruolo,
-        metodi_pagamento: [],
-        ordini: []
-    };
+  const nuovoUtente = {
+      email: email.trim().toLowerCase(),
+      nome: nome.trim(),
+      cognome: cognome.trim(),
+      password: hashedPassword,
+      ruolo: ruolo,
+      metodi_pagamento: [],
+      ordini: []
+  };
 
-    return await users.insertOne(nuovoUtente);
+  return await users.insertOne(nuovoUtente);
 }
 
 async function updateUserByEmail(db, email, aggiornamenti) {

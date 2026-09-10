@@ -1,0 +1,648 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500&display=swap" rel="stylesheet">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
+
+<!--QUI SOLO I CSS GLOBALI-->
+<link rel="stylesheet" href="/css/global.css">
+
+<%- include('./components/header', { role }) %>
+
+<%
+/*
+  Vista attesa dal controller:
+    res.render('ristoratore/gestione-ristoranti', { role, meals, ristoranti })
+
+  - role       -> ruolo dell'utente loggato, qui deve essere 'R' (lo stesso valore
+                  che l'header si aspetta per mostrare il menu da ristoratore)
+  - meals      -> array completo dei piatti selezionabili, stessa forma di TheMealDB:
+                  { idMeal, strMeal, strCategory, strArea, strMealThumb, strTags }
+  - ristoranti -> array dei ristoranti GIA' del ristoratore loggato, ognuno col proprio
+                  campo "menu" già popolato con gli oggetti piatto completi (non solo gli id),
+                  cosi in modifica i piatti già inseriti si vedono subito, anche se non
+                  compaiono nel filtro corrente della lista "meals".
+
+  Endpoint API assunti (adatta i path a quelli reali del progetto):
+    POST   /api/ristoranti            -> crea ristorante
+    PUT    /api/ristoranti/:id        -> aggiorna ristorante
+    DELETE /api/ristoranti/:id        -> elimina ristorante
+    GET    /api/ristoranti/mie        -> usato solo come fallback se la SSR non ha
+                                          fornito "ristoranti" (es. refresh manuale)
+  Le richieste passano con { credentials: 'include' } cosi il cookie httpOnly "token" viaggia da solo.
+*/
+%>
+
+<main class="gr-page" x-data="gestioneRistoranti()" x-init="init()">
+
+  <header class="gr-head">
+    <div>
+      <p class="gr-eyebrow">Area ristoratore</p>
+      <h1 class="gr-title">I tuoi ristoranti</h1>
+    </div>
+    <button type="button" class="gr-btn gr-btn--senape" @click="openCreate()">
+      + Nuovo ristorante
+    </button>
+  </header>
+
+  <p class="gr-error" x-show="error" x-transition x-text="error"></p>
+
+  <!-- LISTA RISTORANTI -->
+  <section class="gr-list" x-show="!loading">
+    <template x-if="ristoranti.length === 0">
+      <div class="gr-empty">
+        <p>Non hai ancora nessun ristorante.</p>
+        <p class="gr-empty__hint">Crea il primo per iniziare a comporre il menù.</p>
+      </div>
+    </template>
+
+    <template x-for="r in ristoranti" :key="r._id">
+      <article class="gr-card">
+        <div class="gr-card__main">
+          <h2 class="gr-card__name" x-text="r.nome"></h2>
+          <p class="gr-card__addr" x-text="r.via"></p>
+          <p class="gr-card__meta">
+            <span x-text="'Tel. ' + r.n_tell"></span>
+            <span class="gr-dot">·</span>
+            <span x-text="'P.IVA ' + r.piva"></span>
+          </p>
+          <p class="gr-card__dishes" x-text="(r.menu?.length || 0) + ' piatti nel menù'"></p>
+        </div>
+        <div class="gr-card__actions">
+          <button type="button" class="gr-btn gr-btn--ghost" @click="openEdit(r)">Modifica</button>
+          <button type="button" class="gr-btn gr-btn--danger" @click="askDelete(r._id)">Elimina</button>
+        </div>
+      </article>
+    </template>
+  </section>
+
+  <p class="gr-loading" x-show="loading">Caricamento ristoranti…</p>
+
+  <!-- CONFERMA ELIMINAZIONE -->
+  <div class="gr-overlay" x-show="confirmingDeleteId" x-transition.opacity @click.self="cancelDelete()">
+    <div class="gr-confirm">
+      <p>Eliminare definitivamente questo ristorante? L'operazione non è reversibile.</p>
+      <div class="gr-confirm__actions">
+        <button type="button" class="gr-btn gr-btn--ghost" @click="cancelDelete()">Annulla</button>
+        <button type="button" class="gr-btn gr-btn--danger" @click="confirmDelete()">Elimina</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANNELLO CREA/MODIFICA -->
+  <div class="gr-overlay" x-show="panelOpen" x-transition.opacity @keydown.escape.window="closePanel()">
+    <div class="gr-panel" @click.outside="closePanel()">
+
+      <div class="gr-panel__head">
+        <h2 x-text="editingId ? 'Modifica ristorante' : 'Nuovo ristorante'"></h2>
+        <button type="button" class="gr-close" @click="closePanel()" aria-label="Chiudi">✕</button>
+      </div>
+
+      <form class="gr-form" @submit.prevent="saveRistorante()">
+
+        <div class="gr-field">
+          <label for="nome">Nome</label>
+          <input id="nome" type="text" x-model="form.nome" required maxlength="120" placeholder="Es. Osteria del Senape">
+        </div>
+
+        <div class="gr-field">
+          <label for="via">Via</label>
+          <input id="via" type="text" x-model="form.via" required maxlength="160" placeholder="Es. Via Roma 12">
+        </div>
+
+        <div class="gr-row">
+          <div class="gr-field">
+            <label for="n_tell">Telefono</label>
+            <input id="n_tell" type="tel" x-model="form.n_tell" required pattern="[0-9+ ]{6,20}" placeholder="Es. 0381 123456">
+          </div>
+          <div class="gr-field">
+            <label for="piva">Partita IVA</label>
+            <input id="piva" type="text" x-model="form.piva" required maxlength="11" minlength="11" placeholder="11 cifre">
+          </div>
+        </div>
+
+        <!-- SELETTORE MENU -->
+        <div class="gr-field">
+          <label>Menù</label>
+          <p class="gr-field__hint">Cerca e seleziona i piatti da inserire nel menù del ristorante.</p>
+
+          <div class="gr-selected" x-show="form.menu.length > 0">
+            <template x-for="m in form.menu" :key="m.idMeal">
+              <span class="gr-chip">
+                <span x-text="m.strMeal"></span>
+                <button type="button" @click="removeMeal(m.idMeal)" aria-label="Rimuovi piatto">✕</button>
+              </span>
+            </template>
+          </div>
+
+          <div class="gr-meal-filters">
+            <input
+              type="search"
+              x-model="mealQuery"
+              placeholder="Cerca piatto per nome…"
+              class="gr-meal-search">
+            <select x-model="mealCategoryFilter" class="gr-meal-category">
+              <option value="">Tutte le categorie</option>
+              <template x-for="c in categories" :key="c">
+                <option :value="c" x-text="c"></option>
+              </template>
+            </select>
+          </div>
+
+          <div class="gr-meal-list">
+            <template x-for="meal in filteredMeals" :key="meal.idMeal">
+              <label class="gr-meal" :class="{ 'gr-meal--on': selectedIds.includes(meal.idMeal) }">
+                <input
+                  type="checkbox"
+                  class="gr-meal__check"
+                  :checked="selectedIds.includes(meal.idMeal)"
+                  @change="toggleMeal(meal)">
+                <img class="gr-meal__thumb" :src="meal.strMealThumb" :alt="meal.strMeal" loading="lazy">
+                <span class="gr-meal__info">
+                  <span class="gr-meal__name" x-text="meal.strMeal"></span>
+                  <span class="gr-meal__tags" x-text="meal.strCategory + ' · ' + meal.strArea"></span>
+                </span>
+              </label>
+            </template>
+
+            <p class="gr-meal-empty" x-show="filteredMeals.length === 0">Nessun piatto trovato.</p>
+          </div>
+        </div>
+
+        <p class="gr-error" x-show="formError" x-text="formError"></p>
+
+        <div class="gr-panel__actions">
+          <button type="button" class="gr-btn gr-btn--ghost" @click="closePanel()">Annulla</button>
+          <button type="submit" class="gr-btn gr-btn--senape" :disabled="saving">
+            <span x-text="saving ? 'Salvataggio…' : (editingId ? 'Salva modifiche' : 'Crea ristorante')"></span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</main>
+
+<style>
+  .gr-page {
+    --gr-bg: #16261c;
+    --gr-panel: #1f3327;
+    --gr-panel-raised: #24392c;
+    --gr-line: #3a4d3e;
+    --gr-cream: #f2ead9;
+    --gr-cream-dim: #cfc7b6;
+    --gr-senape: #d9a441;
+    --gr-senape-dark: #b8842e;
+    --gr-danger: #c1440e;
+
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem 5rem;
+    color: var(--gr-cream);
+    font-family: 'Inter', sans-serif;
+  }
+
+  .gr-head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+  }
+
+  .gr-eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.04em;
+    color: var(--gr-senape);
+    margin: 0 0 0.35rem;
+  }
+
+  .gr-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 2rem;
+    margin: 0;
+  }
+
+  .gr-btn {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    border-radius: 6px;
+    border: 1px solid transparent;
+    padding: 0.6rem 1.1rem;
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+  .gr-btn:disabled { opacity: 0.6; cursor: progress; }
+
+  .gr-btn--senape {
+    background: var(--gr-senape);
+    color: #22190a;
+  }
+  .gr-btn--senape:hover:not(:disabled) { background: var(--gr-senape-dark); }
+
+  .gr-btn--ghost {
+    background: transparent;
+    border-color: var(--gr-line);
+    color: var(--gr-cream);
+  }
+  .gr-btn--ghost:hover { border-color: var(--gr-senape); }
+
+  .gr-btn--danger {
+    background: transparent;
+    border-color: var(--gr-danger);
+    color: #f0a988;
+  }
+  .gr-btn--danger:hover { background: var(--gr-danger); color: var(--gr-cream); }
+
+  .gr-error {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.85rem;
+    color: #f0a988;
+    margin: 0 0 1rem;
+  }
+
+  .gr-loading, .gr-empty { color: var(--gr-cream-dim); }
+  .gr-empty {
+    border: 1px dashed var(--gr-line);
+    border-radius: 8px;
+    padding: 2.5rem 1.5rem;
+    text-align: center;
+  }
+  .gr-empty__hint { font-size: 0.9rem; color: var(--gr-cream-dim); }
+
+  .gr-list {
+    display: grid;
+    gap: 1rem;
+  }
+
+  .gr-card {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--gr-panel);
+    border: 1px solid var(--gr-line);
+    border-radius: 8px;
+    padding: 1.25rem 1.4rem;
+    flex-wrap: wrap;
+  }
+
+  .gr-card__name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.15rem;
+    margin: 0 0 0.25rem;
+  }
+  .gr-card__addr { margin: 0 0 0.35rem; color: var(--gr-cream-dim); }
+  .gr-card__meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--gr-cream-dim);
+    margin: 0 0 0.35rem;
+  }
+  .gr-dot { margin: 0 0.4rem; }
+  .gr-card__dishes { font-size: 0.85rem; color: var(--gr-senape); margin: 0; }
+
+  .gr-card__actions {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .gr-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 16, 12, 0.65);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    padding: 1rem;
+  }
+
+  .gr-confirm {
+    background: var(--gr-panel-raised);
+    border: 1px solid var(--gr-line);
+    border-radius: 8px;
+    padding: 1.5rem;
+    max-width: 380px;
+  }
+  .gr-confirm__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 1.25rem;
+  }
+
+  .gr-panel {
+    background: var(--gr-panel-raised);
+    border: 1px solid var(--gr-line);
+    border-radius: 10px;
+    width: min(640px, 100%);
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 1.75rem;
+  }
+
+  .gr-panel__head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+  }
+  .gr-panel__head h2 { font-family: 'Space Grotesk', sans-serif; margin: 0; }
+
+  .gr-close {
+    background: transparent;
+    border: none;
+    color: var(--gr-cream-dim);
+    font-size: 1.1rem;
+    cursor: pointer;
+  }
+  .gr-close:hover { color: var(--gr-cream); }
+
+  .gr-form { display: flex; flex-direction: column; gap: 1.1rem; }
+  .gr-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  .gr-field { display: flex; flex-direction: column; gap: 0.4rem; }
+  .gr-field label {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.9rem;
+  }
+  .gr-field__hint {
+    font-size: 0.8rem;
+    color: var(--gr-cream-dim);
+    margin: -0.15rem 0 0.3rem;
+  }
+
+  .gr-field input, .gr-meal-search, .gr-meal-category {
+    font-family: 'Inter', sans-serif;
+    background: var(--gr-bg);
+    border: 1px solid var(--gr-line);
+    border-radius: 6px;
+    color: var(--gr-cream);
+    padding: 0.55rem 0.7rem;
+  }
+  .gr-field input:focus, .gr-meal-search:focus, .gr-meal-category:focus {
+    outline: none;
+    border-color: var(--gr-senape);
+  }
+
+  .gr-selected {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.6rem;
+  }
+  .gr-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    background: rgba(217, 164, 65, 0.15);
+    border: 1px solid var(--gr-senape);
+    color: var(--gr-senape);
+    border-radius: 999px;
+    padding: 0.25rem 0.5rem 0.25rem 0.7rem;
+    font-size: 0.8rem;
+  }
+  .gr-chip button {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.75rem;
+  }
+
+  .gr-meal-filters {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 0.6rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .gr-meal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--gr-line);
+    border-radius: 8px;
+    padding: 0.5rem;
+  }
+
+  .gr-meal {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.4rem;
+    border-radius: 6px;
+    cursor: pointer;
+  }
+  .gr-meal:hover { background: rgba(255,255,255,0.03); }
+  .gr-meal--on { background: rgba(217, 164, 65, 0.1); }
+
+  .gr-meal__check { accent-color: var(--gr-senape); }
+  .gr-meal__thumb {
+    width: 42px;
+    height: 42px;
+    object-fit: cover;
+    border-radius: 6px;
+    flex-shrink: 0;
+  }
+  .gr-meal__info { display: flex; flex-direction: column; }
+  .gr-meal__name { font-size: 0.9rem; }
+  .gr-meal__tags {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--gr-cream-dim);
+  }
+  .gr-meal-empty { text-align: center; color: var(--gr-cream-dim); font-size: 0.85rem; padding: 1rem 0; }
+
+  .gr-panel__actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.6rem;
+    margin-top: 0.5rem;
+  }
+
+  @media (max-width: 600px) {
+    .gr-row, .gr-meal-filters { grid-template-columns: 1fr; }
+    .gr-panel { max-height: 100vh; height: 100%; border-radius: 0; }
+  }
+</style>
+
+<script>
+function gestioneRistoranti() {
+  return {
+    // dati iniettati dal server (lista completa piatti selezionabili, da TheMealDB / DB)
+    ALL_MEALS: <%- JSON.stringify(meals || []) %>,
+
+    // ristoranti del ristoratore, già con i rispettivi menu popolati (SSR)
+    ristoranti: <%- JSON.stringify(ristoranti || []) %>,
+    loading: false,
+    error: '',
+
+    panelOpen: false,
+    editingId: null,
+    saving: false,
+    formError: '',
+    form: { nome: '', via: '', n_tell: '', piva: '', menu: [] },
+
+    mealQuery: '',
+    mealCategoryFilter: '',
+
+    confirmingDeleteId: null,
+
+    init() {
+      // i dati arrivano già dal render server-side; la fetch è solo un fallback
+      // (es. pagina raggiunta senza passare da res.render con "ristoranti")
+      if (!Array.isArray(this.ristoranti) || this.ristoranti.length === 0) {
+        this.fetchRistoranti();
+      }
+    },
+
+    get categories() {
+      return [...new Set(this.ALL_MEALS.map(m => m.strCategory))].sort();
+    },
+
+    get selectedIds() {
+      return this.form.menu.map(m => m.idMeal);
+    },
+
+    get filteredMeals() {
+      const q = this.mealQuery.trim().toLowerCase();
+      return this.ALL_MEALS.filter(m => {
+        const matchesQuery = !q || m.strMeal.toLowerCase().includes(q);
+        const matchesCategory = !this.mealCategoryFilter || m.strCategory === this.mealCategoryFilter;
+        return matchesQuery && matchesCategory;
+      }).slice(0, 60); // evita di renderizzare migliaia di righe insieme
+    },
+
+    async fetchRistoranti() {
+      this.loading = true;
+      this.error = '';
+      try {
+        const res = await fetch('/api/ristoranti/mie', { credentials: 'include' });
+        if (!res.ok) throw new Error('Impossibile caricare i ristoranti.');
+        this.ristoranti = await res.json();
+      } catch (err) {
+        this.error = err.message || 'Errore di rete.';
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    openCreate() {
+      this.editingId = null;
+      this.form = { nome: '', via: '', n_tell: '', piva: '', menu: [] };
+      this.mealQuery = '';
+      this.mealCategoryFilter = '';
+      this.formError = '';
+      this.panelOpen = true;
+    },
+
+    openEdit(r) {
+      this.editingId = r._id;
+      this.form = {
+        nome: r.nome,
+        via: r.via,
+        n_tell: r.n_tell,
+        piva: r.piva,
+        menu: [...(r.menu || [])]
+      };
+      this.mealQuery = '';
+      this.mealCategoryFilter = '';
+      this.formError = '';
+      this.panelOpen = true;
+    },
+
+    closePanel() {
+      if (this.saving) return;
+      this.panelOpen = false;
+    },
+
+    toggleMeal(meal) {
+      const idx = this.form.menu.findIndex(m => m.idMeal === meal.idMeal);
+      if (idx === -1) {
+        this.form.menu.push(meal);
+      } else {
+        this.form.menu.splice(idx, 1);
+      }
+    },
+
+    removeMeal(idMeal) {
+      this.form.menu = this.form.menu.filter(m => m.idMeal !== idMeal);
+    },
+
+    async saveRistorante() {
+      this.formError = '';
+
+      if (this.form.piva.length !== 11) {
+        this.formError = 'La partita IVA deve avere 11 cifre.';
+        return;
+      }
+
+      this.saving = true;
+      const isEdit = !!this.editingId;
+      const url = isEdit ? `/api/ristoranti/${this.editingId}` : '/api/ristoranti';
+      const method = isEdit ? 'PUT' : 'POST';
+
+      try {
+        const res = await fetch(url, {
+          method,
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(this.form)
+        });
+
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          throw new Error(data.message || 'Salvataggio non riuscito.');
+        }
+
+        const saved = await res.json();
+
+        if (isEdit) {
+          this.ristoranti = this.ristoranti.map(r => r._id === saved._id ? saved : r);
+        } else {
+          this.ristoranti.push(saved);
+        }
+
+        this.panelOpen = false;
+      } catch (err) {
+        this.formError = err.message || 'Errore di rete.';
+      } finally {
+        this.saving = false;
+      }
+    },
+
+    askDelete(id) {
+      this.confirmingDeleteId = id;
+    },
+
+    cancelDelete() {
+      this.confirmingDeleteId = null;
+    },
+
+    async confirmDelete() {
+      const id = this.confirmingDeleteId;
+      if (!id) return;
+
+      try {
+        const res = await fetch(`/api/ristoranti/${id}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        if (!res.ok) throw new Error('Eliminazione non riuscita.');
+
+        this.ristoranti = this.ristoranti.filter(r => r._id !== id);
+      } catch (err) {
+        this.error = err.message || 'Errore di rete.';
+      } finally {
+        this.confirmingDeleteId = null;
+      }
+    }
+  };
+}
+</script>
