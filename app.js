@@ -103,9 +103,11 @@ app.get("/gestione-ristoranti", middlewares.verifyJWT, async (req, res) => {
 	try {
 
 		const restaurants = restaurantServices.findRestaurantsByRistoratoreId(db, req.user.id);
-		const meals = mealServices.getAvailableMealsLocal;
+		const meals = await mealServices.getAvailableMealsLocal();
 
-		res.render("gestione-ristoranti",
+		
+
+			res.render("gestione-ristoranti",
 		{
 			role: req.user.ruolo,
 			ristoranti: restaurants,
