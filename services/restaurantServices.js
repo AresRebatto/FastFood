@@ -211,7 +211,8 @@ async function searchByKind(db, kind, q) {
                   idMeal: piatto.idMeal,
                   strMeal: piatto.strMeal,
                   strCategory: piatto.strCategory,
-                  strMealThumb: piatto.strMealThumb
+                  strMealThumb: piatto.strMealThumb,
+                  price: piatto.price
               });
           }
 		}
@@ -222,10 +223,41 @@ async function searchByKind(db, kind, q) {
   return [];
 }
 
+async function searchByRestaurantId(db, id) {
+ if (!ObjectId.isValid(id)) {
+    const error = new Error("ID ristorante non valido.");
+    error.statusCode = 400;
+    throw error;
+  }
+
+  const collection = db.collection("Ristorante");
+
+	const ristorante = await collection.findOne({ _id: new ObjectId(id) });
+
+	if (!ristorante) {
+    const error = new Error("Ristorante non trovato.");
+    error.statusCode = 404;
+    throw error;
+  }
+
+	return {
+		nome: ristorante.nome,
+    via: ristorante.via,
+    n_tell: ristorante.n_tell,
+    menu: (ristorante.menu || []).map((meal) => ({
+      strMeal: meal.strMeal,
+      strCategory: meal.strCategory,
+      strMealThumb: meal.strMealThumb,
+      strTags: meal.strTags,
+      price: meal.price,
+    })),
+  };
+}
 module.exports = {
 	findRestaurantsByRistoratoreId,
 	addRistorante,
 	updateRistorante,
 	deleteRistorante,
-  searchByKind
+	searchByKind,
+  searchByRestaurantId
 };

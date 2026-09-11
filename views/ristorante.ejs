@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Risultati della ricerca</title>
+  <title><%= ristorante.nome %> - Menù</title>
 
   <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -48,97 +48,58 @@
       color: var(--color-neutral-900);
     }
 
-    /* ===== SEARCH BAR ===== */
-    .search-bar-sticky {
-      background: var(--color-neutral-900);
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--color-neutral-700);
-      position: sticky;
-      top: 0;
-      z-index: 50;
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 5rem;
     }
 
-    .search-bar-compact {
-      max-width: 700px;
-      margin: 0 auto;
+    /* ===== HERO RISTORANTE ===== */
+    .restaurant-header {
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2.5rem;
+      box-shadow: 0 4px 16px rgba(33, 28, 26, 0.04);
+    }
+
+    .restaurant-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 2.2rem;
+      margin: 0 0 0.8rem 0;
+      color: var(--color-neutral-900);
+    }
+
+    .restaurant-details {
       display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      color: var(--color-neutral-700);
+      font-size: 0.95rem;
+    }
+
+    .restaurant-detail-item {
+      display: flex;
+      align-items: center;
       gap: 0.5rem;
     }
 
-    .search-select,
-    .search-input {
-      font-family: 'Inter', sans-serif;
-      border: 1px solid var(--color-neutral-700);
-      border-radius: 8px;
-      padding: 0.6rem 0.9rem;
-      background: var(--color-neutral-900);
-      color: var(--color-neutral-100);
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    .search-input { flex: 1; }
-
-    .search-select {
-      font-family: 'IBM Plex Mono', monospace;
-      color: var(--color-neutral-100);
-      cursor: pointer;
-      appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23F5F1EC' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-      background-repeat: no-repeat;
-      background-position: right 0.75rem center;
-      padding-right: 2.2rem;
-    }
-
-    .search-select option {
-      background: var(--color-neutral-900);
-      color: var(--color-neutral-100);
-    }
-
-    .search-select:focus,
-    .search-input:focus {
-      border-color: var(--color-neutral-400);
-    }
-
-    .search-btn {
-      background: var(--color-primary);
-      color: var(--color-neutral-0);
+    /* ===== SEZIONE MENU ===== */
+    .section-title {
       font-family: 'Space Grotesk', sans-serif;
-      font-weight: 600;
-      border: none;
-      border-radius: 8px;
-      padding: 0.6rem 1.4rem;
-      cursor: pointer;
-      transition: background 0.2s ease;
-    }
-    .search-btn:hover { background: var(--color-primary-dark); }
-
-    /* ===== RISULTATI ===== */
-    .results-page {
-      padding: 2rem 1.5rem 4rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-
-    .results-header h2 {
-      font-family: 'Space Grotesk', sans-serif;
-      color: var(--color-neutral-900);
+      font-size: 1.5rem;
       margin-bottom: 1.5rem;
+      color: var(--color-neutral-900);
     }
 
-    .no-results {
-      text-align: center;
-      color: var(--color-neutral-400);
-      padding: 3rem 0;
-    }
-
-    .results-grid {
+    .menu-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1.25rem;
     }
 
-    /* ===== CARD ===== */
+    /* ===== CARD PIATTO ===== */
     .card {
       background: var(--color-neutral-0);
       border: 1px solid var(--color-neutral-200);
@@ -149,6 +110,7 @@
       flex-direction: column;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
+
     .card:hover {
       transform: translateY(-3px);
       box-shadow: 0 6px 16px rgba(33, 28, 26, 0.08);
@@ -156,27 +118,22 @@
 
     .card-img {
       width: 100%;
-      height: 160px;
+      height: 170px;
       object-fit: cover;
     }
 
     .card-body {
-      padding: 1rem 1.2rem;
+      padding: 1.2rem;
       flex: 1;
+      display: flex;
+      flex-direction: column;
     }
 
-    .card-title {
-      font-family: 'Space Grotesk', sans-serif;
-      font-size: 1.1rem;
-      color: var(--color-neutral-900);
-      margin: 0.3rem 0;
-    }
-
-    .card-via {
-      font-family: 'Inter', sans-serif;
-      font-size: 0.85rem;
-      color: var(--color-neutral-400);
-      margin: 0;
+    .card-badges {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+      margin-bottom: 0.4rem;
     }
 
     .badge-categoria {
@@ -186,28 +143,32 @@
       color: var(--color-neutral-700);
       padding: 0.15rem 0.5rem;
       border-radius: 20px;
-      display: inline-block;
     }
 
-    .card-ristorante-info {
-      margin-top: 0.6rem;
-      padding-top: 0.6rem;
-      border-top: 1px dashed var(--color-neutral-200);
+    .badge-tag {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.72rem;
+      background: var(--color-neutral-100);
+      border: 1px solid var(--color-neutral-200);
+      color: var(--color-neutral-400);
+      padding: 0.15rem 0.4rem;
+      border-radius: 20px;
     }
 
-    .card-nome-ristorante {
-      font-weight: 600;
+    .card-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.15rem;
       color: var(--color-neutral-900);
-      margin: 0;
-      font-size: 0.9rem;
+      margin: 0.2rem 0 0.5rem 0;
     }
 
     .card-prezzo {
       font-family: 'IBM Plex Mono', monospace;
       font-weight: 600;
-      font-size: 1rem;
+      font-size: 1.1rem;
       color: var(--color-primary);
-      margin: 0.4rem 0 0;
+      margin-top: auto;
+      padding-top: 0.6rem;
     }
 
     .card-actions {
@@ -259,27 +220,6 @@
     }
     .btn-ordina:hover { background: var(--color-primary-dark); }
     .btn-ordina--added { background: var(--color-success); color: var(--color-neutral-0); }
-
-    .btn-espandi {
-      display: block;
-      text-align: center;
-      padding: 0.7rem;
-      background: var(--color-secondary);
-      color: var(--color-neutral-0);
-      text-decoration: none;
-      font-family: 'Inter', sans-serif;
-      font-size: 0.9rem;
-      transition: background 0.2s ease;
-    }
-    .btn-espandi:hover { background: var(--color-neutral-900); }
-    .btn-espandi--ghost {
-      background: transparent;
-      color: var(--color-secondary);
-      border-top: 1px solid var(--color-neutral-200);
-    }
-    .btn-espandi--ghost:hover {
-      background: var(--color-neutral-100);
-    }
 
     /* ===== CARRELLO FLOTTANTE ===== */
     .cart-fab {
@@ -507,7 +447,6 @@
     }
     .btn-confirm:hover { background: var(--color-primary-dark); }
 
-    /* Toast Notification */
     .toast-notification {
       position: fixed;
       top: 1.5rem;
@@ -541,105 +480,79 @@
 
   <%- include('components/header') %>
 
-  <section class="search-bar-sticky">
-    <form
-      id="searchForm"
-      action="#"
-      onsubmit="handleSearch(event)"
-      class="search-bar-compact"
-    >
-      <select name="tipo" id="searchKind" class="search-select" onchange="updatePlaceholder(this.value)">
-        <option value="restaurants" <%= searchKind === 'restaurants' ? 'selected' : '' %>>Ristoranti</option>
-        <option value="dishes" <%= searchKind === 'dishes' ? 'selected' : '' %>>Piatti</option>
-      </select>
+  <main class="container">
 
-      <input
-        type="text"
-        id="searchInput"
-        name="q"
-        value="<%= query || '' %>"
-        placeholder="<%= searchKind === 'dishes' ? 'Cerca un piatto...' : 'Cerca un ristorante...' %>"
-        class="search-input"
-      />
-
-      <button type="submit" class="search-btn">Cerca</button>
-    </form>
-  </section>
-
-  <main class="results-page">
-
-    <div class="results-header">
-      <h2><%= results.length %> risultat<%= results.length === 1 ? 'o' : 'i' %> per "<%= query %>"</h2>
-    </div>
-
-    <% if (!results || results.length === 0) { %>
-      <div class="no-results">
-        <p>Nessun risultato trovato. Prova con un'altra ricerca.</p>
+    <!-- ===== HEADER DEL RISTORANTE ===== -->
+    <header class="restaurant-header">
+      <h1 class="restaurant-title"><%= ristorante.nome %></h1>
+      <div class="restaurant-details">
+        <div class="restaurant-detail-item">
+          📍 <span><%= ristorante.via %></span>
+        </div>
+        <div class="restaurant-detail-item">
+          📞 <span><%= ristorante.n_tell %></span>
+        </div>
       </div>
-    <% } else { %>
-      <div class="results-grid">
+    </header>
 
-        <% results.forEach(function(item) { %>
+    <!-- ===== MENU DEL RISTORANTE ===== -->
+    <section>
+      <h2 class="section-title">Menù</h2>
 
-          <% if (searchKind === 'restaurants') { %>
+      <% if (!ristorante.menu || ristorante.menu.length === 0) { %>
+        <p style="color: var(--color-neutral-400);">Nessun piatto disponibile in questo menù.</p>
+      <% } else { %>
+        <div class="menu-grid">
 
-            <!-- ===== CARD RISTORANTE ===== -->
-            <div class="card card-ristorante">
-              <div class="card-body">
-                <h3 class="card-title"><%= item.nome %></h3>
-                <p class="card-via"><%= item.via %></p>
-              </div>
-              <a href="/ristorante/<%= item.id %>" class="btn-espandi">
-                Espandi
-              </a>
-            </div>
-
-          <% } else if (searchKind === 'dishes') { %>
-
-            <!-- ===== CARD PIATTO ===== -->
+          <% ristorante.menu.forEach(function(piatto, index) { %>
             <div
-              class="card card-piatto"
+              class="card"
               x-data="{
                 qty: 1,
                 added: false,
                 item: <%- JSON.stringify({
-                  id: item.id,
-                  nome: item.nome,
-                  idMeal: item.idMeal,
-                  strMeal: item.strMeal,
-                  strMealThumb: item.strMealThumb,
-                  price: item.price
+                  id: ristorante.id,
+                  nome: ristorante.nome,
+                  idMeal: piatto.idMeal || (ristorante.id + '-' + index),
+                  strMeal: piatto.strMeal,
+                  strMealThumb: piatto.strMealThumb,
+                  price: piatto.price
                 }).replace(/"/g, '&quot;') %>
               }"
             >
               <img
-                src="<%= item.strMealThumb %>"
-                alt="<%= item.strMeal %>"
+                src="<%= piatto.strMealThumb %>"
+                alt="<%= piatto.strMeal %>"
                 class="card-img"
               />
-              <div class="card-body">
-                <span class="badge-categoria"><%= item.strCategory %></span>
-                <h3 class="card-title"><%= item.strMeal %></h3>
 
-                <div class="card-ristorante-info">
-                  <p class="card-nome-ristorante"><%= item.nome %></p>
-                  <p class="card-via"><%= item.via %></p>
-                  <% if (item.price !== undefined && item.price !== null) { %>
-                    <p class="card-prezzo">€<%= Number(item.price).toFixed(2) %></p>
+              <div class="card-body">
+                <div class="card-badges">
+                  <% if (piatto.strCategory) { %>
+                    <span class="badge-categoria"><%= piatto.strCategory %></span>
+                  <% } %>
+                  <% if (piatto.strTags) { %>
+                    <span class="badge-tag"><%= piatto.strTags %></span>
                   <% } %>
                 </div>
+
+                <h3 class="card-title"><%= piatto.strMeal %></h3>
+
+                <% if (piatto.price !== undefined && piatto.price !== null) { %>
+                  <p class="card-prezzo">€<%= Number(piatto.price).toFixed(2) %></p>
+                <% } %>
 
                 <div class="card-actions">
                   <div class="qty-selector">
                     <button
                       type="button"
-                      @click.stop="qty > 1 && qty--"
+                      @click="qty > 1 && qty--"
                       class="qty-btn"
                     >−</button>
                     <span class="qty-value" x-text="qty"></span>
                     <button
                       type="button"
-                      @click.stop="qty++"
+                      @click="qty++"
                       class="qty-btn"
                     >+</button>
                   </div>
@@ -648,7 +561,7 @@
                     type="button"
                     class="btn-ordina"
                     :class="{ 'btn-ordina--added': added }"
-                    @click.stop="
+                    @click="
                       $store.cart.addItem(item, qty, () => {
                         added = true;
                         setTimeout(() => added = false, 1200);
@@ -660,18 +573,12 @@
                   </button>
                 </div>
               </div>
-
-              <a href="/ristorante/<%= item.id %>" class="btn-espandi btn-espandi--ghost">
-                Vedi locale
-              </a>
             </div>
+          <% }) %>
 
-          <% } %>
-
-        <% }) %>
-
-      </div>
-    <% } %>
+        </div>
+      <% } %>
+    </section>
 
   </main>
 
@@ -916,23 +823,6 @@
           }
         }
       };
-    }
-
-    function handleSearch(event) {
-      event.preventDefault();
-
-      const kind = document.getElementById('searchKind').value;
-      const query = document.getElementById('searchInput').value.trim();
-
-      if (!query) return;
-
-      const params = new URLSearchParams({ q: query });
-      window.location.href = `/search-result/${kind}?${params.toString()}`;
-    }
-
-    function updatePlaceholder(kind) {
-      const input = document.getElementById('searchInput');
-      input.placeholder = kind === 'dishes' ? 'Cerca un piatto...' : 'Cerca un ristorante...';
     }
   </script>
 </body>

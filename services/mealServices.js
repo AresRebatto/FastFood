@@ -15,7 +15,8 @@ async function getAvailableMealsLocal() {
     strCategory: piatto.strCategory,
     strArea: piatto.strArea,
     strMealThumb: piatto.strMealThumb,
-    strTags: piatto.strTags
+		strTags: piatto.strTags,
+    price: piatto.price
   }));
 }
 

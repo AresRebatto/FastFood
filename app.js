@@ -67,7 +67,7 @@ app.get("/profilo", middlewares.verifyJWT, async (req, res) => {
 				.status(500)
 				.json({ Error: "Non e' stato possibile connettersi al DB" });
 		}
-		const user = userServices.findUserByEmail(db, email);
+		const user = userServices.findUserByEmail(db, req.user.email);
 
 		//problema di sicurezza in cui utente è entrato con JWT falso
 		if (!user) {
@@ -159,6 +159,27 @@ app.get("/search-result/:kind", middlewares.verifyJWT, async (req, res) => {
   }
 });
 
+app.get("/ristorante/:id", middlewares.verifyJWT, async (req, res) => {
+	if (db === null) {
+		return res
+			.status(500)
+			.json({ Error: "Non e' stato possibile connettersi al DB" });
+	}
+
+	const restaurantId = req.params.id;
+
+	try {
+		const restaurant = await restaurantServices.searchByRestaurantId(db, restaurantId)
+		res.render("ristorante", { ristorante: restaurant, role: req.user.ruolo });
+	} catch (error) {
+	 console.error("Errore eliminazione ristorante:", error.message);
+    const statusCode = error.statusCode || 500;
+
+    return res
+        .status(statusCode)
+        .json({ message: error.message || "Errore interno durante la ricerca del ristorante." });
+	}
+});
 
 
 app.post("/login", middlewares.validateCredentials, async (req, res) => {
