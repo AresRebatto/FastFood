@@ -132,9 +132,7 @@ app.get("/search-result/:kind", middlewares.verifyJWT, async (req, res) => {
   const { q } = req.query;
 
   if (kind !== 'restaurants' && kind !== 'dishes') {
-    return res.status(400).json({
-        message: "Parametro ':kind' nell'URL non valido. Valori ammessi: 'restaurant' o 'plate'."
-    });
+    return res.status(404).render("not_found");
   }
 
   if (!q || typeof q !== 'string' || q.trim() === '') {

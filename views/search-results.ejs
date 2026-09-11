@@ -179,7 +179,6 @@
       margin: 0;
     }
 
-    .badge-distanza,
     .badge-categoria {
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.75rem;
@@ -424,6 +423,104 @@
       background: var(--color-neutral-400);
       cursor: not-allowed;
     }
+
+    /* ===== OVERLAY MODALE & TOAST ===== */
+    .modal-backdrop {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(33, 28, 26, 0.6);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+
+    .modal-card {
+      background: var(--color-neutral-0);
+      border-radius: 14px;
+      max-width: 420px;
+      width: 100%;
+      padding: 1.5rem;
+      box-shadow: 0 12px 32px rgba(33, 28, 26, 0.2);
+    }
+
+    .modal-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.2rem;
+      margin: 0 0 0.8rem 0;
+      color: var(--color-neutral-900);
+    }
+
+    .modal-body {
+      font-size: 0.95rem;
+      color: var(--color-neutral-700);
+      line-height: 1.4;
+      margin-bottom: 1.5rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.8rem;
+    }
+
+    .btn-cancel {
+      background: transparent;
+      border: 1px solid var(--color-neutral-200);
+      color: var(--color-neutral-700);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn-cancel:hover { background: var(--color-neutral-100); }
+
+    .btn-confirm {
+      background: var(--color-primary);
+      border: none;
+      color: var(--color-neutral-0);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .btn-confirm:hover { background: var(--color-primary-dark); }
+
+    /* Toast Notification */
+    .toast-notification {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      background: var(--color-error);
+      color: var(--color-neutral-0);
+      padding: 0.9rem 1.2rem;
+      border-radius: 8px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.15);
+      z-index: 1001;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      max-width: 360px;
+    }
+
+    .toast-close {
+      background: none;
+      border: none;
+      color: var(--color-neutral-0);
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0;
+      margin-left: auto;
+    }
   </style>
 </head>
 <body>
@@ -438,8 +535,8 @@
       class="search-bar-compact"
     >
       <select name="tipo" id="searchKind" class="search-select" onchange="updatePlaceholder(this.value)">
-        <option value="restaurants" <%= searchKind === 'restaurants' || searchKind === 'ristoranti' ? 'selected' : '' %>>Ristoranti</option>
-        <option value="dishes" <%= searchKind === 'dishes' || searchKind === 'piatti' ? 'selected' : '' %>>Piatti</option>
+        <option value="restaurants" <%= searchKind === 'restaurants' ? 'selected' : '' %>>Ristoranti</option>
+        <option value="dishes" <%= searchKind === 'dishes' ? 'selected' : '' %>>Piatti</option>
       </select>
 
       <input
@@ -447,7 +544,7 @@
         id="searchInput"
         name="q"
         value="<%= query || '' %>"
-        placeholder="<%= (searchKind === 'dishes' || searchKind === 'piatti') ? 'Cerca un piatto...' : 'Cerca un ristorante...' %>"
+        placeholder="<%= searchKind === 'dishes' ? 'Cerca un piatto...' : 'Cerca un ristorante...' %>"
         class="search-input"
       />
 
@@ -470,21 +567,20 @@
 
         <% results.forEach(function(item) { %>
 
-          <% if (item.kind === 'ristorante') { %>
+          <% if (searchKind === 'restaurants') { %>
 
-            <!-- ===== CARD RISTORANTE (nessuna immagine) ===== -->
+            <!-- ===== CARD RISTORANTE ===== -->
             <div class="card card-ristorante">
               <div class="card-body">
                 <h3 class="card-title"><%= item.nome %></h3>
                 <p class="card-via"><%= item.via %></p>
-                <span class="badge-distanza"><%= item.distanza_km %> km</span>
               </div>
               <a href="/ristorante/<%= item.id %>" class="btn-espandi">
                 Espandi
               </a>
             </div>
 
-          <% } else { %>
+          <% } else if (searchKind === 'dishes') { %>
 
             <!-- ===== CARD PIATTO ===== -->
             <div
@@ -512,7 +608,7 @@
 
                 <div class="card-ristorante-info">
                   <p class="card-nome-ristorante"><%= item.nome %></p>
-                  <p class="card-via"><%= item.via %> · <%= item.distanza_km %> km</p>
+                  <p class="card-via"><%= item.via %></p>
                 </div>
 
                 <div class="card-actions">
@@ -535,10 +631,10 @@
                     class="btn-ordina"
                     :class="{ 'btn-ordina--added': added }"
                     @click.stop="
-                      if ($store.cart.addItem(item, qty)) {
+                      $store.cart.addItem(item, qty, () => {
                         added = true;
                         setTimeout(() => added = false, 1200);
-                      }
+                      });
                     "
                   >
                     <span x-show="!added">Ordina</span>
@@ -613,6 +709,39 @@
     </div>
   </div>
 
+  <!-- ===== DIALOG MODALE PER CONFERMA CAMBIO RISTORANTE ===== -->
+  <div
+    x-data
+    x-show="$store.cart.pendingModal.show"
+    class="modal-backdrop"
+    x-transition
+    x-cloak
+  >
+    <div class="modal-card" @click.outside="$store.cart.cancelChange()">
+      <h3 class="modal-title">Svuotare il carrello?</h3>
+      <p class="modal-body">
+        Il carrello contiene già piatti di <strong x-text="'&quot;' + $store.cart.restaurantName + '&quot;'"></strong>.
+        Vuoi svuotarlo per aggiungere piatti da <strong x-text="'&quot;' + $store.cart.pendingModal.newItem?.nome + '&quot;'"></strong>?
+      </p>
+      <div class="modal-actions">
+        <button type="button" class="btn-cancel" @click="$store.cart.cancelChange()">Annulla</button>
+        <button type="button" class="btn-confirm" @click="$store.cart.confirmChange()">Svuota e aggiungi</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== TOAST PER NOTIFICA ERRORI ===== -->
+  <div
+    x-data
+    x-show="$store.cart.toast.show"
+    class="toast-notification"
+    x-transition
+    x-cloak
+  >
+    <span x-text="$store.cart.toast.message"></span>
+    <button type="button" class="toast-close" @click="$store.cart.toast.show = false">✕</button>
+  </div>
+
   <%- include('components/footer') %>
 
   <script>
@@ -622,15 +751,54 @@
         restaurantId: localStorage.getItem('cartRestaurantId') || null,
         restaurantName: localStorage.getItem('cartRestaurantName') || null,
 
-        addItem(item, qty) {
+        pendingModal: {
+          show: false,
+          newItem: null,
+          newQty: 1,
+          onSuccess: null
+        },
+
+        toast: {
+          show: false,
+          message: ''
+        },
+
+        showError(msg) {
+          this.toast.message = msg;
+          this.toast.show = true;
+          setTimeout(() => {
+            this.toast.show = false;
+          }, 4000);
+        },
+
+        addItem(item, qty, onSuccess) {
           if (this.items.length > 0 && this.restaurantId && String(this.restaurantId) !== String(item.id)) {
-            const confermato = confirm(
-              `Il carrello contiene già piatti di "${this.restaurantName}". Vuoi svuotarlo per ordinare da "${item.nome}"?`
-            );
-            if (!confermato) return false;
-            this.items = [];
+            this.pendingModal.newItem = item;
+            this.pendingModal.newQty = qty;
+            this.pendingModal.onSuccess = onSuccess;
+            this.pendingModal.show = true;
+            return;
           }
 
+          this._executeAddItem(item, qty);
+          if (onSuccess) onSuccess();
+        },
+
+        confirmChange() {
+          this.clear();
+          this._executeAddItem(this.pendingModal.newItem, this.pendingModal.newQty);
+          if (this.pendingModal.onSuccess) this.pendingModal.onSuccess();
+          this.cancelChange();
+        },
+
+        cancelChange() {
+          this.pendingModal.show = false;
+          this.pendingModal.newItem = null;
+          this.pendingModal.newQty = 1;
+          this.pendingModal.onSuccess = null;
+        },
+
+        _executeAddItem(item, qty) {
           this.restaurantId = item.id;
           this.restaurantName = item.nome;
 
@@ -647,7 +815,6 @@
           }
 
           this._persist();
-          return true;
         },
 
         removeItem(idMeal) {
@@ -720,7 +887,7 @@
             }
           } catch (err) {
             console.error(err);
-            alert("Non è stato possibile procedere con l'ordine. Riprova.");
+            cart.showError("Non è stato possibile procedere con l'ordine. Riprova.");
           } finally {
             this.submitting = false;
           }
