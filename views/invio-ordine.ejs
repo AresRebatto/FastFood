@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pagamento Ordine</title>
+
+  <!-- Google Fonts & Style -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
+  
+  <link rel="stylesheet" href="/css/global.css">
+
+  <!-- Alpine.js -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    :root {
+      --color-primary: #D8402A;
+      --color-primary-dark: #A82F1E;
+      --color-secondary: #1F3D2B;
+      --color-success: #3A7D44;
+      --color-error: #B3261E;
+      --color-neutral-900: #211C1A;
+      --color-neutral-700: #4B4340;
+      --color-neutral-400: #8C8380;
+      --color-neutral-200: #E8E2DD;
+      --color-neutral-100: #F5F1EC;
+      --color-neutral-0: #FFFFFF;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--color-neutral-100);
+      color: var(--color-neutral-900);
+      margin: 0;
+      padding: 0;
+    }
+
+    .checkout-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .checkout-container { grid-template-columns: 1fr; }
+    }
+
+    .checkout-section {
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      margin: 0 0 1.2rem 0;
+    }
+
+    /* Prodotti */
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px dashed var(--color-neutral-200);
+    }
+    .order-item:last-child { border-bottom: none; }
+
+    /* Form & Inputs */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.3rem; }
+    .form-input {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 8px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    /* Carte di credito */
+    .card-option {
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+    }
+    .card-option.selected {
+      border-color: var(--color-primary);
+      background: var(--color-neutral-100);
+    }
+
+    /* Riepilogo Costi */
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+      font-size: 0.95rem;
+    }
+    .summary-total {
+      border-top: 2px solid var(--color-neutral-200);
+      padding-top: 0.8rem;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--color-primary);
+      color: white;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .btn-submit:disabled {
+      background: var(--color-neutral-400);
+      cursor: not-allowed;
+    }
+
+    .error-box {
+      background: #FDE8E8;
+      border: 1px solid var(--color-error);
+      color: var(--color-error);
+      padding: 0.6rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('components/header') %>
+
+  <main class="checkout-container" 
+    x-data="checkoutPage({
+      prodotti: <%- JSON.stringify(listaProdotti) %>,
+      totaleIniziale: <%= totale %>,
+      carteSalvate: <%- JSON.stringify(metodiPagamento) %>,
+      idRistorante: '<%= typeof id_ristorante !== "undefined" ? id_ristorante : "" %>'
+    })"
+  >
+    <!-- COLONNA SINISTRA: Dettagli -->
+    <div>
+      <!-- 1. RESOCONTO PRODOTTI -->
+      <section class="checkout-section">
+        <h2 class="section-h2">Riepilogo Ordine</h2>
+        <template x-for="item in prodotti" :key="item.idMeal">
+          <div class="order-item">
+            <div>
+              <strong x-text="item.strMeal"></strong>
+            </div>
+            <span style="font-family: 'IBM Plex Mono', monospace;" x-text="'€' + Number(item.price).toFixed(2)"></span>
+          </div>
+        </template>
+      </section>
+
+      <!-- 2. SPEDIZIONE / DOMICILIO -->
+      <section class="checkout-section">
+        <h2 class="section-h2">Consegna</h2>
+        
+        <!-- Mostrato solo se ci sono 2 o più prodotti -->
+        <template x-if="prodotti.length >= 2">
+          <div>
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
+              <input type="checkbox" x-model="domicilio" @change="handleDomicilioChange()">
+              Consegna a domicilio
+            </label>
+
+            <div x-show="domicilio" style="margin-top: 1rem;">
+              <div class="form-group">
+                <label for="via">Inserisci Via e Numero Civico</label>
+                <input 
+                  type="text" 
+                  id="via" 
+                  class="form-input" 
+                  x-model.debounce.500ms="via" 
+                  @input="calcolaSpedizione()" 
+                  placeholder="Es. Via Roma 12, Milano"
+                />
+              </div>
+
+              <!-- Feedback Spedizione -->
+              <div x-show="loadingSpedizione" style="font-size: 0.85rem; color: var(--color-neutral-400);">
+                Calcolo spedizione in corso...
+              </div>
+
+              <div x-show="erroreVia" class="error-box" x-text="erroreVia"></div>
+
+              <template x-if="infoSpedizione && !erroreVia">
+                <div style="background: var(--color-neutral-100); padding: 0.8rem; border-radius: 8px; margin-top: 0.5rem; font-size: 0.85rem;">
+                  <p style="margin: 0 0 0.3rem 0;">🚚 Distanza: <strong x-text="infoSpedizione.distanzaKm + ' km'"></strong></p>
+                  <p style="margin: 0;">⏱️ Tempo stimato: <strong x-text="infoSpedizione.tempoStimato"></strong></p>
+                </div>
+              </template>
+            </div>
+          </div>
+        </template>
+
+        <template x-if="prodotti.length < 2">
+          <p style="margin: 0; color: var(--color-neutral-700); font-size: 0.9rem;">
+            Ritiro in sede (La consegna a domicilio è disponibile per 2 o più prodotti).
+          </p>
+        </template>
+      </section>
+
+      <!-- 3. METODO DI PAGAMENTO -->
+      <section class="checkout-section">
+        <h2 class="section-h2">Metodo di Pagamento</h2>
+
+        <!-- Carte salvate -->
+        <template x-for="(carta, index) in carte" :key="index">
+          <div 
+            class="card-option" 
+            :class="{ 'selected': cartaSelezionata === index }"
+            @click="cartaSelezionata = index; nuovaCartaForm = false;"
+          >
+            <input type="radio" name="pagamento" :value="index" :checked="cartaSelezionata === index">
+            <div>
+              <strong x-text="'•••• ' + carta.num_carta.slice(-4)"></strong>
+              <div style="font-size: 0.8rem; color: var(--color-neutral-400);" x-text="'Scad: ' + carta.scadenza"></div>
+            </div>
+          </div>
+        </template>
+
+        <!-- Bottone/Form Nuova Carta Temporanea -->
+        <div style="margin-top: 1rem;">
+          <button 
+            type="button" 
+            style="background: none; border: none; color: var(--color-primary); font-weight: 600; cursor: pointer; padding: 0;"
+            @click="nuovaCartaForm = !nuovaCartaForm; if(nuovaCartaForm) cartaSelezionata = 'nuova'"
+          >
+            + Aggiungi una nuova carta (solo per questo ordine)
+          </button>
+
+          <div x-show="nuovaCartaForm" style="margin-top: 1rem; border-top: 1px solid var(--color-neutral-200); padding-top: 1rem;">
+            <div class="form-group">
+              <label>Numero Carta</label>
+              <input type="text" class="form-input" x-model="nuovaCarta.num_carta" placeholder="1234 5678 9012 3456" />
+            </div>
+            <div style="display: flex; gap: 0.8rem;">
+              <div class="form-group" style="flex: 1;">
+                <label>Scadenza</label>
+                <input type="text" class="form-input" x-model="nuovaCarta.scadenza" placeholder="MM/YY" />
+              </div>
+              <div class="form-group" style="flex: 1;">
+                <label>CVV</label>
+                <input type="text" class="form-input" x-model="nuovaCarta.CVV" placeholder="123" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- COLONNA DESTRA: Totale e Invio -->
+    <div>
+      <div class="checkout-section" style="position: sticky; top: 1.5rem;">
+        <h2 class="section-h2">Riepilogo Costi</h2>
+
+        <div class="summary-row">
+          <span>Subtotale</span>
+          <span x-text="'€' + totaleIniziale.toFixed(2)"></span>
+        </div>
+
+        <div class="summary-row" x-show="domicilio">
+          <span>Spedizione</span>
+          <span x-text="costoSpedizione > 0 ? '€' + costoSpedizione.toFixed(2) : '--'"></span>
+        </div>
+
+        <div class="summary-row summary-total">
+          <span>Totale</span>
+          <span style="color: var(--color-primary);" x-text="'€' + totaleFinale.toFixed(2)"></span>
+        </div>
+
+        <button 
+          type="button" 
+          class="btn-submit" 
+          :disabled="!isValidForm || invioInCorso"
+          @click="inviaOrdine()"
+        >
+          <span x-show="!invioInCorso">Conferma e Paga</span>
+          <span x-show="invioInCorso">Invio in corso...</span>
+        </button>
+
+        <div x-show="erroreGenerico" class="error-box" x-text="erroreGenerico"></div>
+      </div>
+    </div>
+  </main>
+
+
+  <script>
+    function checkoutPage(config) {
+      return {
+        prodotti: config.prodotti || [],
+        totaleIniziale: Number(config.totaleIniziale) || 0,
+        carte: config.carteSalvate || [],
+        idRistorante: config.idRistorante || '',
+
+        domicilio: false,
+        via: '',
+        infoSpedizione: null,
+        costoSpedizione: 0,
+        loadingSpedizione: false,
+        erroreVia: null,
+
+        cartaSelezionata: config.carteSalvate.length > 0 ? 0 : 'nuova',
+        nuovaCartaForm: config.carteSalvate.length === 0,
+        nuovaCarta: { num_carta: '', scadenza: '', CVV: '' },
+
+        invioInCorso: false,
+        erroreGenerico: null,
+
+        get totaleFinale() {
+          return this.totaleIniziale + (this.domicilio ? this.costoSpedizione : 0);
+        },
+
+        get isValidForm() {
+          // Controlla Via se domicilio selezionato
+          if (this.domicilio && (!this.via.trim() || this.erroreVia || this.loadingSpedizione)) {
+            return false;
+          }
+
+          // Controlla Metodo di Pagamento
+          if (this.cartaSelezionata === 'nuova') {
+            if (!this.nuovaCarta.num_carta || !this.nuovaCarta.scadenza || !this.nuovaCarta.CVV) {
+              return false;
+            }
+          } else if (this.cartaSelezionata === null || this.cartaSelezionata === undefined) {
+            return false;
+          }
+
+          return true;
+        },
+
+        handleDomicilioChange() {
+          if (!this.domicilio) {
+            this.via = '';
+            this.infoSpedizione = null;
+            this.costoSpedizione = 0;
+            this.erroreVia = null;
+          }
+        },
+
+        async calcolaSpedizione() {
+          if (!this.via.trim() || this.via.length < 4) {
+            this.infoSpedizione = null;
+            this.costoSpedizione = 0;
+            return;
+          }
+
+          this.loadingSpedizione = true;
+          this.erroreVia = null;
+
+          try {
+            const res = await fetch(`/calcola-distanza?via=${encodeURIComponent(this.via)}`);
+            
+            if (res.status === 400) {
+              throw new Error("Indirizzo non trovato. Verifica la via inserita.");
+            }
+
+            if (!res.ok) throw new Error("Errore durante il calcolo della distanza.");
+
+            const data = await res.json();
+            this.infoSpedizione = data;
+            this.costoSpedizione = Number(data.costoSped) || 0;
+          } catch (err) {
+            this.erroreVia = err.message;
+            this.infoSpedizione = null;
+            this.costoSpedizione = 0;
+          } finally {
+            this.loadingSpedizione = false;
+          }
+        },
+
+        async inviaOrdine() {
+          if (!this.isValidForm || this.invioInCorso) return;
+
+          this.invioInCorso = true;
+          this.erroreGenerico = null;
+
+          const payload = {
+            listaProdotti: this.prodotti,
+            totale: this.totaleFinale,
+            id_ristorante: this.idRistorante
+          };
+
+          if (this.domicilio) {
+            payload.via = this.via;
+          }
+
+          try {
+            const res = await fetch('/invia-ordine', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify(payload)
+            });
+
+            if (!res.ok) throw new Error("Si è verificato un errore durante l'invio dell'ordine.");
+
+            const data = await res.json();
+
+            if (data.redirectUrl) {
+              window.location.href = data.redirectUrl;
+            } else {
+              alert("Ordine completato con successo!");
+            }
+          } catch (err) {
+            this.erroreGenerico = err.message;
+          } finally {
+            this.invioInCorso = false;
+          }
+        }
+      };
+    }
+  </script>
+</body>
+</html>
