@@ -182,56 +182,7 @@
         </template>
       </section>
 
-      <!-- 2. SPEDIZIONE / DOMICILIO -->
-      <section class="checkout-section">
-        <h2 class="section-h2">Consegna</h2>
-
-        <!-- Calcola il totale dei pezzi fisici (somma delle quantità) per la condizione dei 2 prodotti -->
-        <template x-if="totalPezzi >= 2">
-          <div>
-            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
-              <input type="checkbox" x-model="domicilio" @change="handleDomicilioChange()">
-              Consegna a domicilio
-            </label>
-
-            <div x-show="domicilio" style="margin-top: 1rem;">
-              <div class="form-group">
-                <label for="via">Inserisci Via e Numero Civico</label>
-                <input
-                  type="text"
-                  id="via"
-                  class="form-input"
-                  x-model.debounce.500ms="via"
-                  @input="calcolaSpedizione()"
-                  placeholder="Es. Via Roma 12, Milano"
-                />
-              </div>
-
-              <!-- Feedback Spedizione -->
-              <div x-show="loadingSpedizione" style="font-size: 0.85rem; color: var(--color-neutral-400);">
-                Calcolo spedizione in corso...
-              </div>
-
-              <div x-show="erroreVia" class="error-box" x-text="erroreVia"></div>
-
-              <template x-if="infoSpedizione && !erroreVia">
-                <div style="background: var(--color-neutral-100); padding: 0.8rem; border-radius: 8px; margin-top: 0.5rem; font-size: 0.85rem;">
-                  <p style="margin: 0 0 0.3rem 0;">🚚 Distanza: <strong x-text="infoSpedizione.distanzaKm + ' km'"></strong></p>
-                  <p style="margin: 0;">⏱️ Tempo stimato: <strong x-text="infoSpedizione.tempoStimato"></strong></p>
-                </div>
-              </template>
-            </div>
-          </div>
-        </template>
-
-        <template x-if="totalPezzi < 2">
-          <p style="margin: 0; color: var(--color-neutral-700); font-size: 0.9rem;">
-            Ritiro in sede (La consegna a domicilio è disponibile per 2 o più prodotti).
-          </p>
-        </template>
-      </section>
-
-      <!-- 3. METODO DI PAGAMENTO -->
+      <!-- 2. METODO DI PAGAMENTO -->
       <section class="checkout-section">
         <h2 class="section-h2">Metodo di Pagamento</h2>
 
@@ -285,19 +236,9 @@
       <div class="checkout-section" style="position: sticky; top: 1.5rem;">
         <h2 class="section-h2">Riepilogo Costi</h2>
 
-        <div class="summary-row">
-          <span>Subtotale</span>
-          <span x-text="'€' + totaleIniziale.toFixed(2)"></span>
-        </div>
-
-        <div class="summary-row" x-show="domicilio">
-          <span>Spedizione</span>
-          <span x-text="costoSpedizione > 0 ? '€' + costoSpedizione.toFixed(2) : '--'"></span>
-        </div>
-
         <div class="summary-row summary-total">
           <span>Totale</span>
-          <span style="color: var(--color-primary);" x-text="'€' + totaleFinale.toFixed(2)"></span>
+          <span style="color: var(--color-primary);" x-text="'€' + totaleIniziale.toFixed(2)"></span>
         </div>
 
         <button
@@ -325,13 +266,6 @@
         carte: config.carteSalvate || [],
         idRistorante: config.idRistorante || '',
 
-        domicilio: false,
-        via: '',
-        infoSpedizione: null,
-        costoSpedizione: 0,
-        loadingSpedizione: false,
-        erroreVia: null,
-
         cartaSelezionata: config.carteSalvate.length > 0 ? 0 : 'nuova',
         nuovaCartaForm: config.carteSalvate.length === 0,
         nuovaCarta: { num_carta: '', scadenza: '', CVV: '' },
@@ -339,19 +273,7 @@
         invioInCorso: false,
         erroreGenerico: null,
 
-        get totalPezzi() {
-          return this.prodotti.reduce((sum, item) => sum + (item.qty || 1), 0);
-        },
-
-        get totaleFinale() {
-          return this.totaleIniziale + (this.domicilio ? this.costoSpedizione : 0);
-        },
-
         get isValidForm() {
-          if (this.domicilio && (!this.via.trim() || this.erroreVia || this.loadingSpedizione)) {
-            return false;
-          }
-
           if (this.cartaSelezionata === 'nuova') {
             if (!this.nuovaCarta.num_carta || !this.nuovaCarta.scadenza || !this.nuovaCarta.CVV) {
               return false;
@@ -363,46 +285,6 @@
           return true;
         },
 
-        handleDomicilioChange() {
-          if (!this.domicilio) {
-            this.via = '';
-            this.infoSpedizione = null;
-            this.costoSpedizione = 0;
-            this.erroreVia = null;
-          }
-        },
-
-        async calcolaSpedizione() {
-          if (!this.via.trim() || this.via.length < 4) {
-            this.infoSpedizione = null;
-            this.costoSpedizione = 0;
-            return;
-          }
-
-          this.loadingSpedizione = true;
-          this.erroreVia = null;
-
-          try {
-            const res = await fetch(`/calcola-distanza?via=${encodeURIComponent(this.via)}`);
-
-            if (res.status === 400) {
-              throw new Error("Indirizzo non trovato. Verifica la via inserita.");
-            }
-
-            if (!res.ok) throw new Error("Errore durante il calcolo della distanza.");
-
-            const data = await res.json();
-            this.infoSpedizione = data;
-            this.costoSpedizione = Number(data.costoSped) || 0;
-          } catch (err) {
-            this.erroreVia = err.message;
-            this.infoSpedizione = null;
-            this.costoSpedizione = 0;
-          } finally {
-            this.loadingSpedizione = false;
-          }
-        },
-
         async inviaOrdine() {
           if (!this.isValidForm || this.invioInCorso) return;
 
@@ -411,13 +293,9 @@
 
           const payload = {
             listaProdotti: this.prodotti,
-            totale: this.totaleFinale,
+            totale: this.totaleIniziale,
             idRistorante: this.idRistorante
           };
-
-          if (this.domicilio) {
-            payload.via = this.via;
-          }
 
           try {
             const res = await fetch('/invia-ordine', {

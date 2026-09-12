@@ -110,7 +110,7 @@
       flex-direction: column;
       transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    
+
     .card:hover {
       transform: translateY(-3px);
       box-shadow: 0 6px 16px rgba(33, 28, 26, 0.08);
@@ -504,138 +504,90 @@
       <% } else { %>
         <div class="menu-grid">
 
-          <% ristorante.menu.forEach(function(piatto, index) { %>
-            <div
-              class="card"
-              x-data="{
-                qty: 1,
-                added: false,
-                item: <%- JSON.stringify({
-                  id: ristorante.id,
-                  nome: ristorante.nome,
-                  idMeal: piatto.idMeal || (ristorante.id + '-' + index),
-                  strMeal: piatto.strMeal,
-                  strMealThumb: piatto.strMealThumb,
-                  price: piatto.price
-                }).replace(/"/g, '&quot;') %>
-              }"
-            >
-              <img
-                src="<%= piatto.strMealThumb %>"
-                alt="<%= piatto.strMeal %>"
-                class="card-img"
-              />
-
-              <div class="card-body">
-                <div class="card-badges">
-                  <% if (piatto.strCategory) { %>
-                    <span class="badge-categoria"><%= piatto.strCategory %></span>
-                  <% } %>
-                  <% if (piatto.strTags) { %>
-                    <span class="badge-tag"><%= piatto.strTags %></span>
-                  <% } %>
-                </div>
-
-                <h3 class="card-title"><%= piatto.strMeal %></h3>
-
-                <% if (piatto.price !== undefined && piatto.price !== null) { %>
-                  <p class="card-prezzo">€<%= Number(piatto.price).toFixed(2) %></p>
-                <% } %>
-
-                <div class="card-actions">
-                  <div class="qty-selector">
-                    <button
-                      type="button"
-                      @click="qty > 1 && qty--"
-                      class="qty-btn"
-                    >−</button>
-                    <span class="qty-value" x-text="qty"></span>
-                    <button
-                      type="button"
-                      @click="qty++"
-                      class="qty-btn"
-                    >+</button>
-                  </div>
-
-                  <button
-                    type="button"
-                    class="btn-ordina"
-                    :class="{ 'btn-ordina--added': added }"
-                    @click="
-                      $store.cart.addItem(item, qty, () => {
-                        added = true;
-                        setTimeout(() => added = false, 1200);
-                      });
-                    "
-                  >
-                    <span x-show="!added">Ordina</span>
-                    <span x-show="added" x-cloak>Aggiunto ✓</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          <% }) %>
-
-        </div>
+        <% ristorante.menu.forEach(function(piatto, index) { %>
+			<%
+			var currentRestId = ristorante.id || ristorante._id || ristorante.idRistorante || ristorante.codice;
+			var currentMealId = piatto.idMeal || piatto._id || piatto.id || (currentRestId + '-' + index);
+			%>
+		    <div
+		    class="card"
+		    x-data="{
+		        qty: 1,
+		        added: false,
+		        item: <%- JSON.stringify({
+		        id: String(currentRestId),
+		        nome: ristorante.nome,
+		        idMeal: String(currentMealId),
+		        strMeal: piatto.strMeal,
+		        strMealThumb: piatto.strMealThumb,
+		        price: piatto.price
+		        }).replace(/"/g, '&quot;') %>
+		    }"
+		    >
+		    <img
+		        src="<%= piatto.strMealThumb %>"
+		        alt="<%= piatto.strMeal %>"
+		        class="card-img"
+		    />
+		
+		    <div class="card-body">
+		        <div class="card-badges">
+		        <% if (piatto.strCategory) { %>
+		            <span class="badge-categoria"><%= piatto.strCategory %></span>
+		        <% } %>
+		        <% if (piatto.strTags) { %>
+		            <span class="badge-tag"><%= piatto.strTags %></span>
+		        <% } %>
+		        </div>
+		
+		        <h3 class="card-title"><%= piatto.strMeal %></h3>
+		
+		        <% if (piatto.price !== undefined && piatto.price !== null) { %>
+		        <p class="card-prezzo">€<%= Number(piatto.price).toFixed(2) %></p>
+		        <% } %>
+		
+		        <div class="card-actions">
+		        <div class="qty-selector">
+		            <button
+		            type="button"
+		            @click="qty > 1 && qty--"
+		            class="qty-btn"
+		            >−</button>
+		            <span class="qty-value" x-text="qty"></span>
+		            <button
+		            type="button"
+		            @click="qty++"
+		            class="qty-btn"
+		            >+</button>
+		        </div>
+		
+		        <button
+		            type="button"
+		            class="btn-ordina"
+		            :class="{ 'btn-ordina--added': added }"
+		            @click="
+		            $store.cart.addItem(item, qty, () => {
+		                added = true;
+		                setTimeout(() => added = false, 1200);
+		            });
+		            "
+		        >
+		            <span x-show="!added">Ordina</span>
+		            <span x-show="added" x-cloak>Aggiunto ✓</span>
+		        </button>
+		        </div>
+		    </div>
+		    </div>
+		<% }) %>
+		
+		</div>
       <% } %>
     </section>
 
   </main>
 
   <!-- ===== CARRELLO FLOTTANTE ===== -->
-  <div x-data="cartWidget()" x-show="$store.cart.totalItems > 0" style="display: none;">
-
-    <button type="button" class="cart-fab" @click="open = !open" aria-label="Carrello">
-      🛒
-      <span class="cart-fab-badge" x-text="$store.cart.totalItems"></span>
-    </button>
-
-    <div
-      x-show="open"
-      x-transition
-      @click.outside="open = false"
-      class="cart-panel"
-      x-cloak
-    >
-      <div class="cart-panel-header">
-        <h4>Il tuo ordine</h4>
-        <p class="cart-panel-ristorante" x-text="$store.cart.restaurantName"></p>
-      </div>
-
-      <template x-if="$store.cart.items.length === 0">
-        <p class="cart-panel-empty">Il carrello è vuoto.</p>
-      </template>
-
-      <ul class="cart-panel-list" x-show="$store.cart.items.length > 0">
-        <template x-for="item in $store.cart.items" :key="item.idMeal">
-          <li class="cart-panel-item">
-            <img :src="item.strMealThumb" :alt="item.strMeal" />
-            <span class="cart-panel-item-name" x-text="item.strMeal"></span>
-            <template x-if="item.price !== undefined && item.price !== null">
-              <span class="cart-panel-item-price" x-text="'€' + Number(item.price).toFixed(2)"></span>
-            </template>
-            <span class="cart-panel-item-qty" x-text="'x' + item.qty"></span>
-            <button
-              type="button"
-              class="cart-panel-remove"
-              @click="$store.cart.removeItem(item.idMeal)"
-              aria-label="Rimuovi"
-            >✕</button>
-          </li>
-        </template>
-      </ul>
-
-      <button
-        type="button"
-        class="btn-procedi"
-        :disabled="$store.cart.items.length === 0 || submitting"
-        @click="procedi()"
-      >
-        <span x-show="!submitting">Procedi all'ordine</span>
-        <span x-show="submitting" x-cloak>Invio in corso...</span>
-      </button>
-    </div>
-  </div>
+  <%- include('components/cart') %>
 
   <!-- ===== DIALOG MODALE PER CONFERMA CAMBIO RISTORANTE ===== -->
   <div
@@ -658,172 +610,6 @@
     </div>
   </div>
 
-  <!-- ===== TOAST PER NOTIFICA ERRORI ===== -->
-  <div
-    x-data
-    x-show="$store.cart.toast.show"
-    class="toast-notification"
-    x-transition
-    x-cloak
-  >
-    <span x-text="$store.cart.toast.message"></span>
-    <button type="button" class="toast-close" @click="$store.cart.toast.show = false">✕</button>
-  </div>
 
-  <%- include('components/footer') %>
-
-  <script>
-    document.addEventListener('alpine:init', () => {
-      Alpine.store('cart', {
-        items: JSON.parse(localStorage.getItem('cart') || '[]'),
-        restaurantId: localStorage.getItem('cartRestaurantId') || null,
-        restaurantName: localStorage.getItem('cartRestaurantName') || null,
-
-        pendingModal: {
-          show: false,
-          newItem: null,
-          newQty: 1,
-          onSuccess: null
-        },
-
-        toast: {
-          show: false,
-          message: ''
-        },
-
-        showError(msg) {
-          this.toast.message = msg;
-          this.toast.show = true;
-          setTimeout(() => {
-            this.toast.show = false;
-          }, 4000);
-        },
-
-        addItem(item, qty, onSuccess) {
-          if (this.items.length > 0 && this.restaurantId && String(this.restaurantId) !== String(item.id)) {
-            this.pendingModal.newItem = item;
-            this.pendingModal.newQty = qty;
-            this.pendingModal.onSuccess = onSuccess;
-            this.pendingModal.show = true;
-            return;
-          }
-
-          this._executeAddItem(item, qty);
-          if (onSuccess) onSuccess();
-        },
-
-        confirmChange() {
-          this.clear();
-          this._executeAddItem(this.pendingModal.newItem, this.pendingModal.newQty);
-          if (this.pendingModal.onSuccess) this.pendingModal.onSuccess();
-          this.cancelChange();
-        },
-
-        cancelChange() {
-          this.pendingModal.show = false;
-          this.pendingModal.newItem = null;
-          this.pendingModal.newQty = 1;
-          this.pendingModal.onSuccess = null;
-        },
-
-        _executeAddItem(item, qty) {
-          this.restaurantId = item.id;
-          this.restaurantName = item.nome;
-
-          const existing = this.items.find((i) => i.idMeal === item.idMeal);
-          if (existing) {
-            existing.qty += qty;
-          } else {
-            this.items.push({
-              idMeal: item.idMeal,
-              strMeal: item.strMeal,
-              strMealThumb: item.strMealThumb,
-              price: item.price,
-              qty
-            });
-          }
-
-          this._persist();
-        },
-
-        removeItem(idMeal) {
-          this.items = this.items.filter((i) => i.idMeal !== idMeal);
-          if (this.items.length === 0) {
-            this.restaurantId = null;
-            this.restaurantName = null;
-          }
-          this._persist();
-        },
-
-        clear() {
-          this.items = [];
-          this.restaurantId = null;
-          this.restaurantName = null;
-          this._persist();
-        },
-
-        _persist() {
-          localStorage.setItem('cart', JSON.stringify(this.items));
-          if (this.restaurantId) {
-            localStorage.setItem('cartRestaurantId', this.restaurantId);
-            localStorage.setItem('cartRestaurantName', this.restaurantName || '');
-          } else {
-            localStorage.removeItem('cartRestaurantId');
-            localStorage.removeItem('cartRestaurantName');
-          }
-        },
-
-        get totalItems() {
-          return this.items.reduce((sum, i) => sum + i.qty, 0);
-        }
-      });
-    });
-
-    function cartWidget() {
-      return {
-        open: false,
-        submitting: false,
-
-        async procedi() {
-          const cart = Alpine.store('cart');
-          if (!cart.items.length || this.submitting) return;
-
-          this.submitting = true;
-          try {
-            const res = await fetch('/ordine', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
-              body: JSON.stringify({
-                ristoranteId: cart.restaurantId,
-                items: cart.items.map((i) => ({
-                  idMeal: i.idMeal,
-                  nome: i.strMeal,
-                  price: i.price,
-                  qty: i.qty
-                }))
-              })
-            });
-
-            if (!res.ok) throw new Error('Richiesta non riuscita');
-
-            const data = await res.json();
-
-            if (data.redirectUrl) {
-              cart.clear();
-              window.location.href = data.redirectUrl;
-            } else {
-              throw new Error('Risposta inattesa dal server');
-            }
-          } catch (err) {
-            console.error(err);
-            cart.showError("Non è stato possibile procedere con l'ordine. Riprova.");
-          } finally {
-            this.submitting = false;
-          }
-        }
-      };
-    }
-  </script>
 </body>
 </html>

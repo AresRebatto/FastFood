@@ -21,10 +21,6 @@ const uri = process.env.URI;
 const client = new MongoClient(uri);
 let db;
 
-	// const roleMap = {
-	// 	"role": ["page1"]
-	// }
-
 	app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(express.json());
@@ -67,7 +63,7 @@ app.get("/profilo", middlewares.verifyJWT, async (req, res) => {
 				.status(500)
 				.json({ Error: "Non e' stato possibile connettersi al DB" });
 		}
-		const user = userServices.findUserByEmail(db, req.user.email);
+		const user = await userServices.findUserByEmail(db, req.user.email);
 
 		//problema di sicurezza in cui utente è entrato con JWT falso
 		if (!user) {
