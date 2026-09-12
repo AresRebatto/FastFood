@@ -485,45 +485,60 @@
       open: false,
       submitting: false,
 
-      async procedi() {
-        const cart = Alpine.store('cart');
-        if (!cart.items.length || this.submitting) return;
+		async procedi() {
+			const cart = Alpine.store('cart');
+			if (!cart.items.length || this.submitting) return;
 
-        this.submitting = true;
-        try {
-          const res = await fetch('/invio-ordine', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include',
-            body: JSON.stringify({
-              ristoranteId: cart.restaurantId,
-              ristoranteNome: cart.restaurantName,
-              items: cart.items.map((i) => ({
-                idMeal: i.idMeal,
-                nome: i.strMeal,
-                price: i.price,
-                qty: i.qty
-              }))
-            })
-          });
+			this.submitting = true;
+			try {
+			  const res = await fetch('/invio-ordine', {
+			    method: 'POST',
+			    headers: { 'Content-Type': 'application/json' },
+			    credentials: 'include',
+			    body: JSON.stringify({
+			      idRistorante: cart.restaurantId,
+			      nomeRistorante: cart.restaurantName,
+			      items: cart.items.map((i) => ({
+			        idMeal: i.idMeal,
+			        strMeal: i.strMeal,
+			        price: i.price,
+			        qty: i.qty
+			      }))
+			    })
+			  });
 
-          if (!res.ok) throw new Error('Richiesta non riuscita');
+			  const data = await res.json();
 
-          const data = await res.json();
+			  if (!res.ok) {
+			    switch (res.status) {
+			      case 400:
+			        cart.showError(data.Error || 'Dati ordine non validi.');
+			        break;
+			      case 401:
+			        cart.showError('Devi effettuare il login per procedere.');
+			        break;
+			      case 500:
+			        cart.showError('Errore del server. Riprova più tardi.');
+			        break;
+			      default:
+			        cart.showError(data.Error || "Errore durante l'invio dell'ordine.");
+			    }
+			    return;
+			  }
 
-          if (data.redirectUrl) {
-            cart.clear();
-            window.location.href = data.redirectUrl;
-          } else {
-            throw new Error('Risposta inattesa dal server');
-          }
-        } catch (err) {
-          console.error(err);
-          cart.showError("Non è stato possibile procedere con l'ordine. Riprova.");
-        } finally {
-          this.submitting = false;
-        }
-      }
+			  if (data.redirectUrl) {
+			    cart.clear();
+			    window.location.href = data.redirectUrl;
+			  } else {
+			    cart.showError("Risposta inattesa dal server.");
+			  }
+			} catch (err) {
+			  console.error(err);
+			  cart.showError("Impossibile contattare il server. Riprova.");
+			} finally {
+			  this.submitting = false;
+			}
+		}
     };
   }
 </script>

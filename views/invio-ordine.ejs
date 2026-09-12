@@ -9,7 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
-  
+
   <link rel="stylesheet" href="/css/global.css">
 
   <!-- Alpine.js -->
@@ -74,6 +74,13 @@
       border-bottom: 1px dashed var(--color-neutral-200);
     }
     .order-item:last-child { border-bottom: none; }
+
+    .order-item-qty {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--color-neutral-400);
+      font-size: 0.85rem;
+      margin-left: 0.4rem;
+    }
 
     /* Form & Inputs */
     .form-group { margin-bottom: 1rem; }
@@ -147,16 +154,18 @@
 </head>
 <body>
 
-  <%- include('components/header') %>
+  <%- include('components/header', { role: typeof role !== 'undefined' ? role : null }) %>
 
-  <main class="checkout-container" 
-    x-data="checkoutPage({
+  <script>
+    window.__CHECKOUT_DATA__ = {
       prodotti: <%- JSON.stringify(listaProdotti) %>,
       totaleIniziale: <%= totale %>,
       carteSalvate: <%- JSON.stringify(metodiPagamento) %>,
-      idRistorante: '<%= typeof id_ristorante !== "undefined" ? id_ristorante : "" %>'
-    })"
-  >
+      idRistorante: <%- JSON.stringify(typeof idRistorante !== "undefined" ? idRistorante : "") %>
+    };
+  </script>
+
+  <main class="checkout-container" x-data="checkoutPage(window.__CHECKOUT_DATA__)">
     <!-- COLONNA SINISTRA: Dettagli -->
     <div>
       <!-- 1. RESOCONTO PRODOTTI -->
@@ -166,8 +175,9 @@
           <div class="order-item">
             <div>
               <strong x-text="item.strMeal"></strong>
+              <span class="order-item-qty" x-text="'x' + (item.qty || 1)"></span>
             </div>
-            <span style="font-family: 'IBM Plex Mono', monospace;" x-text="'€' + Number(item.price).toFixed(2)"></span>
+            <span style="font-family: 'IBM Plex Mono', monospace;" x-text="'€' + (Number(item.price) * (item.qty || 1)).toFixed(2)"></span>
           </div>
         </template>
       </section>
@@ -175,9 +185,9 @@
       <!-- 2. SPEDIZIONE / DOMICILIO -->
       <section class="checkout-section">
         <h2 class="section-h2">Consegna</h2>
-        
-        <!-- Mostrato solo se ci sono 2 o più prodotti -->
-        <template x-if="prodotti.length >= 2">
+
+        <!-- Calcola il totale dei pezzi fisici (somma delle quantità) per la condizione dei 2 prodotti -->
+        <template x-if="totalPezzi >= 2">
           <div>
             <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-weight: 500;">
               <input type="checkbox" x-model="domicilio" @change="handleDomicilioChange()">
@@ -187,12 +197,12 @@
             <div x-show="domicilio" style="margin-top: 1rem;">
               <div class="form-group">
                 <label for="via">Inserisci Via e Numero Civico</label>
-                <input 
-                  type="text" 
-                  id="via" 
-                  class="form-input" 
-                  x-model.debounce.500ms="via" 
-                  @input="calcolaSpedizione()" 
+                <input
+                  type="text"
+                  id="via"
+                  class="form-input"
+                  x-model.debounce.500ms="via"
+                  @input="calcolaSpedizione()"
                   placeholder="Es. Via Roma 12, Milano"
                 />
               </div>
@@ -214,7 +224,7 @@
           </div>
         </template>
 
-        <template x-if="prodotti.length < 2">
+        <template x-if="totalPezzi < 2">
           <p style="margin: 0; color: var(--color-neutral-700); font-size: 0.9rem;">
             Ritiro in sede (La consegna a domicilio è disponibile per 2 o più prodotti).
           </p>
@@ -227,8 +237,8 @@
 
         <!-- Carte salvate -->
         <template x-for="(carta, index) in carte" :key="index">
-          <div 
-            class="card-option" 
+          <div
+            class="card-option"
             :class="{ 'selected': cartaSelezionata === index }"
             @click="cartaSelezionata = index; nuovaCartaForm = false;"
           >
@@ -242,8 +252,8 @@
 
         <!-- Bottone/Form Nuova Carta Temporanea -->
         <div style="margin-top: 1rem;">
-          <button 
-            type="button" 
+          <button
+            type="button"
             style="background: none; border: none; color: var(--color-primary); font-weight: 600; cursor: pointer; padding: 0;"
             @click="nuovaCartaForm = !nuovaCartaForm; if(nuovaCartaForm) cartaSelezionata = 'nuova'"
           >
@@ -290,9 +300,9 @@
           <span style="color: var(--color-primary);" x-text="'€' + totaleFinale.toFixed(2)"></span>
         </div>
 
-        <button 
-          type="button" 
-          class="btn-submit" 
+        <button
+          type="button"
+          class="btn-submit"
           :disabled="!isValidForm || invioInCorso"
           @click="inviaOrdine()"
         >
@@ -305,6 +315,7 @@
     </div>
   </main>
 
+  <%- include('components/footer') %>
 
   <script>
     function checkoutPage(config) {
@@ -328,17 +339,19 @@
         invioInCorso: false,
         erroreGenerico: null,
 
+        get totalPezzi() {
+          return this.prodotti.reduce((sum, item) => sum + (item.qty || 1), 0);
+        },
+
         get totaleFinale() {
           return this.totaleIniziale + (this.domicilio ? this.costoSpedizione : 0);
         },
 
         get isValidForm() {
-          // Controlla Via se domicilio selezionato
           if (this.domicilio && (!this.via.trim() || this.erroreVia || this.loadingSpedizione)) {
             return false;
           }
 
-          // Controlla Metodo di Pagamento
           if (this.cartaSelezionata === 'nuova') {
             if (!this.nuovaCarta.num_carta || !this.nuovaCarta.scadenza || !this.nuovaCarta.CVV) {
               return false;
@@ -371,7 +384,7 @@
 
           try {
             const res = await fetch(`/calcola-distanza?via=${encodeURIComponent(this.via)}`);
-            
+
             if (res.status === 400) {
               throw new Error("Indirizzo non trovato. Verifica la via inserita.");
             }
@@ -399,7 +412,7 @@
           const payload = {
             listaProdotti: this.prodotti,
             totale: this.totaleFinale,
-            id_ristorante: this.idRistorante
+            idRistorante: this.idRistorante
           };
 
           if (this.domicilio) {

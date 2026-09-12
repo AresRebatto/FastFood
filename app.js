@@ -458,7 +458,93 @@ app.delete("/ristoranti/:id", middlewares.verifyJWT, async (req, res) => {
   }
 });
 
+app.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
+	try {
+		if (db === null) {
+			return res
+				.status(500)
+				.json({ Error: "Non e' stato possibile connettersi al DB" });
+		}
 
+		if (!req.user) {
+			return res.status(401).json({ Error: "Utente non autenticato", redirectUrl: "/access" });
+		}
+
+		const { idRistorante, nomeRistorante, items } = req.body;
+
+		if (!idRistorante || !nomeRistorante || !items || !Array.isArray(items) || items.length === 0) {
+			return res.status(400).json({ Error: "E' necessario fornire tutti i campi obbligatori" });
+		}
+
+		const sum = items.reduce((total, item) => total + ((item.price || 0) * (item.qty || 1)), 0);
+
+		const ordineTemporaneo = {
+			listaProdotti: items,
+			totale: sum,
+			idRistorante,
+			nomeRistorante
+		};
+
+		// Niente sessione: un cookie httpOnly di pochi minuti basta a portare
+		// i dati dal POST al successivo GET /checkout
+		res.cookie("ordineTemporaneo", JSON.stringify(ordineTemporaneo), {
+			httpOnly: true,
+			sameSite: "lax",
+			maxAge: 5 * 60 * 1000 // 5 minuti
+		});
+
+		return res.status(200).json({ redirectUrl: "/checkout" });
+
+	} catch (err) {
+		console.error("Errore invio ordine:", err.message);
+		const statusCode = err.statusCode || 500;
+		return res
+			.status(statusCode)
+			.json({ Error: err.message || "Errore del server durante l'invio." });
+	}
+});
+
+app.get("/checkout", middlewares.verifyJWT, async (req, res) => {
+	if (db === null) {
+		return res
+			.status(500)
+			.json({ Error: "Non e' stato possibile connettersi al DB" });
+	}
+
+	if (!req.user) {
+		return res.redirect("/login");
+	}
+
+	const cookieOrdine = req.cookies.ordineTemporaneo;
+	if (!cookieOrdine) {
+		return res.redirect("/");
+	}
+
+	let datiOrdine;
+	try {
+		datiOrdine = JSON.parse(cookieOrdine);
+	} catch (err) {
+		res.clearCookie("ordineTemporaneo");
+		return res.redirect("/");
+	}
+
+	// Consumato: si cancella subito, come faceva prima il reset della sessione
+	res.clearCookie("ordineTemporaneo");
+
+	try {
+		const user = await userServices.findUserByEmail(db, req.user.email);
+		const metodiPagamento = user ? user.metodi_pagamento : [];
+
+		return res.render("invio-ordine", {
+			...datiOrdine,
+			metodiPagamento,
+			role: req.user.ruolo
+		});
+	} catch (err) {
+		console.error("Errore checkout:", err.message);
+		return res.status(500).json({ Error: "Errore interno durante il checkout." });
+	}
+});
 
 // Middleware di fallback per il 404
 app.use((req, res, next) => {
