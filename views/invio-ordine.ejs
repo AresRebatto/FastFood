@@ -110,7 +110,7 @@
       background: var(--color-neutral-100);
     }
 
-    /* Riepilogo Costi */
+    /* Riepilogo Costi e Tempi */
     .summary-row {
       display: flex;
       justify-content: space-between;
@@ -160,6 +160,7 @@
     window.__CHECKOUT_DATA__ = {
       prodotti: <%- JSON.stringify(listaProdotti) %>,
       totaleIniziale: <%= totale %>,
+      tempoAttesa: <%= typeof tempoAttesa !== 'undefined' ? tempoAttesa : 0 %>,
       carteSalvate: <%- JSON.stringify(metodiPagamento) %>,
       idRistorante: <%- JSON.stringify(typeof idRistorante !== "undefined" ? idRistorante : "") %>
     };
@@ -236,6 +237,11 @@
       <div class="checkout-section" style="position: sticky; top: 1.5rem;">
         <h2 class="section-h2">Riepilogo Costi</h2>
 
+        <div class="summary-row">
+          <span>Tempo di attesa stimato</span>
+          <strong style="font-family: 'IBM Plex Mono', monospace;" x-text="tempoAttesa + ' min'"></strong>
+        </div>
+
         <div class="summary-row summary-total">
           <span>Totale</span>
           <span style="color: var(--color-primary);" x-text="'€' + totaleIniziale.toFixed(2)"></span>
@@ -256,13 +262,12 @@
     </div>
   </main>
 
-  <%- include('components/footer') %>
-
   <script>
     function checkoutPage(config) {
       return {
         prodotti: config.prodotti || [],
         totaleIniziale: Number(config.totaleIniziale) || 0,
+        tempoAttesa: Number(config.tempoAttesa) || 0,
         carte: config.carteSalvate || [],
         idRistorante: config.idRistorante || '',
 
@@ -294,6 +299,7 @@
           const payload = {
             listaProdotti: this.prodotti,
             totale: this.totaleIniziale,
+            tempoAttesa: this.tempoAttesa,
             idRistorante: this.idRistorante
           };
 

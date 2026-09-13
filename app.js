@@ -6,12 +6,14 @@ require("dotenv").config();
 
 //utils
 const utils = require("./utils");
-const cookieUtils = require("./utils/cookie")
+const cookieUtils = require("./utils/cookie");
+const orderUtils = require("./utils/orderUtils");
 
 //services
 const userServices = require("./services/userServices");
 const restaurantServices = require("./services/restaurantServices");
 const mealServices = require("./services/mealServices");
+const orderServices = require("./services/orderServices");
 
 const middlewares = require("./middlewares");
 
@@ -21,7 +23,7 @@ const uri = process.env.URI;
 const client = new MongoClient(uri);
 let db;
 
-	app.set("view engine", "ejs");
+app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(express.json());
 app.use(cookieParser());
@@ -177,6 +179,52 @@ app.get("/ristorante/:id", middlewares.verifyJWT, async (req, res) => {
 	}
 });
 
+app.get("/checkout", middlewares.verifyJWT, async (req, res) => {
+  if (db === null) {
+    return res
+      .status(500)
+      .json({ Error: "Non e' stato possibile connettersi al DB" });
+  }
+
+  if (!req.user) {
+    return res.redirect("/login");
+  }
+
+  const cookieOrdine = req.cookies.ordineTemporaneo;
+  if (!cookieOrdine) {
+    return res.redirect("/");
+  }
+
+  let datiOrdine;
+  try {
+    datiOrdine = JSON.parse(cookieOrdine);
+  } catch (err) {
+    res.clearCookie("ordineTemporaneo");
+    return res.redirect("/");
+  }
+
+  // Consumato: si cancella subito
+  res.clearCookie("ordineTemporaneo");
+
+  try {
+    const user = await userServices.findUserByEmail(db, req.user.email);
+    const metodiPagamento = user ? user.metodi_pagamento : [];
+
+    const ordiniPrecedenti = await orderServices.getTempiOrdiniRistorante(db, datiOrdine.idRistorante);
+
+    let tempoAttesa = orderUtils.calcolaTempoAttesaTotale(ordiniPrecedenti, datiOrdine);
+
+    return res.render("invio-ordine", {
+      ...datiOrdine,
+      metodiPagamento,
+      role: req.user.ruolo,
+      tempoAttesa
+    });
+  } catch (err) {
+    console.error("Errore checkout:", err.message);
+    return res.status(500).json({ Error: "Errore interno durante il checkout." });
+  }
+});
 
 app.post("/login", middlewares.validateCredentials, async (req, res) => {
 	try {
@@ -454,6 +502,24 @@ app.delete("/ristoranti/:id", middlewares.verifyJWT, async (req, res) => {
   }
 });
 
+app.post("/invia-ordine", middlewares.verifyJWT, async (req, res) => {
+	try {
+		if (db === null) {
+			return res
+				.status(500)
+				.json({ Error: "Non e' stato possibile connettersi al DB" });
+		}
+
+		if (!req.user) {
+			return res.status(401).json({ Error: "Utente non autenticato", redirectUrl: "/access" });
+		}
+
+	
+});
+
+
+
+
 app.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
 	try {
 		if (db === null) {
@@ -481,8 +547,7 @@ app.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
 			nomeRistorante
 		};
 
-		// Niente sessione: un cookie httpOnly di pochi minuti basta a portare
-		// i dati dal POST al successivo GET /checkout
+
 		res.cookie("ordineTemporaneo", JSON.stringify(ordineTemporaneo), {
 			httpOnly: true,
 			sameSite: "lax",
@@ -500,47 +565,7 @@ app.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
 	}
 });
 
-app.get("/checkout", middlewares.verifyJWT, async (req, res) => {
-	if (db === null) {
-		return res
-			.status(500)
-			.json({ Error: "Non e' stato possibile connettersi al DB" });
-	}
 
-	if (!req.user) {
-		return res.redirect("/login");
-	}
-
-	const cookieOrdine = req.cookies.ordineTemporaneo;
-	if (!cookieOrdine) {
-		return res.redirect("/");
-	}
-
-	let datiOrdine;
-	try {
-		datiOrdine = JSON.parse(cookieOrdine);
-	} catch (err) {
-		res.clearCookie("ordineTemporaneo");
-		return res.redirect("/");
-	}
-
-	// Consumato: si cancella subito, come faceva prima il reset della sessione
-	res.clearCookie("ordineTemporaneo");
-
-	try {
-		const user = await userServices.findUserByEmail(db, req.user.email);
-		const metodiPagamento = user ? user.metodi_pagamento : [];
-
-		return res.render("invio-ordine", {
-			...datiOrdine,
-			metodiPagamento,
-			role: req.user.ruolo
-		});
-	} catch (err) {
-		console.error("Errore checkout:", err.message);
-		return res.status(500).json({ Error: "Errore interno durante il checkout." });
-	}
-});
 
 // Middleware di fallback per il 404
 app.use((req, res, next) => {
