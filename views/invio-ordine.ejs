@@ -30,6 +30,8 @@
       --color-neutral-0: #FFFFFF;
     }
 
+    [x-cloak] { display: none !important; }
+
     body {
       font-family: 'Inter', sans-serif;
       background-color: var(--color-neutral-100);
@@ -150,6 +152,18 @@
       font-size: 0.85rem;
       margin-top: 0.5rem;
     }
+
+    .success-box {
+      background: #E6F4EA;
+      border: 1px solid var(--color-success);
+      color: var(--color-success);
+      padding: 0.8rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 0.8rem;
+      text-align: center;
+    }
   </style>
 </head>
 <body>
@@ -254,13 +268,17 @@
           @click="inviaOrdine()"
         >
           <span x-show="!invioInCorso">Conferma e Paga</span>
-          <span x-show="invioInCorso">Invio in corso...</span>
+          <span x-show="invioInCorso && !messaggioSuccesso" x-cloak>Invio in corso...</span>
+          <span x-show="messaggioSuccesso" x-cloak>Elaborazione...</span>
         </button>
 
-        <div x-show="erroreGenerico" class="error-box" x-text="erroreGenerico"></div>
+        <div x-show="erroreGenerico" class="error-box" x-text="erroreGenerico" x-cloak></div>
+        <div x-show="messaggioSuccesso" class="success-box" x-text="messaggioSuccesso" x-cloak></div>
       </div>
     </div>
   </main>
+
+  <%- include('components/footer') %>
 
   <script>
     function checkoutPage(config) {
@@ -277,6 +295,7 @@
 
         invioInCorso: false,
         erroreGenerico: null,
+        messaggioSuccesso: null,
 
         get isValidForm() {
           if (this.cartaSelezionata === 'nuova') {
@@ -295,6 +314,7 @@
 
           this.invioInCorso = true;
           this.erroreGenerico = null;
+          this.messaggioSuccesso = null;
 
           const payload = {
             listaProdotti: this.prodotti,
@@ -315,14 +335,14 @@
 
             const data = await res.json();
 
-            if (data.redirectUrl) {
-              window.location.href = data.redirectUrl;
-            } else {
-              alert("Ordine completato con successo!");
-            }
+            this.messaggioSuccesso = "Ordine effettuato correttamente. Reindirizzamento alla home...";
+
+            setTimeout(() => {
+              window.location.href = data.redirectUrl || '/';
+            }, 3000);
+
           } catch (err) {
             this.erroreGenerico = err.message;
-          } finally {
             this.invioInCorso = false;
           }
         }

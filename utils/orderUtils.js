@@ -27,9 +27,10 @@ function calcolaTempoAttesaTotale(ordiniPrecedenti, ordineTemporaneo) {
 
   // 1. Minuti di attesa residui per gli ordini già in coda
   if (ordiniPrecedenti && ordiniPrecedenti.length > 0) {
-    const minutiTrascorsi = orderUtils.calcolaMinutiTrascorsi(ordiniPrecedenti[0].timestamp);
+    // CORRETTO: Chiamata diretta alla funzione nello stesso modulo
+    const minutiTrascorsi = calcolaMinutiTrascorsi(ordiniPrecedenti[0].timestamp);
     const minutiRimanenti = ordiniPrecedenti[0].tempo_stimato - minutiTrascorsi;
-    
+
     tempoAttesa += Math.max(0, minutiRimanenti);
 
     for (let i = 1; i < ordiniPrecedenti.length; i++) {
@@ -45,6 +46,6 @@ function calcolaTempoAttesaTotale(ordiniPrecedenti, ordineTemporaneo) {
 }
 
 module.exports = {
-	calcolaMinutiTrascorsi,
-	calcolaTempoAttesaTotale
-}
+  calcolaMinutiTrascorsi,
+  calcolaTempoAttesaTotale
+};

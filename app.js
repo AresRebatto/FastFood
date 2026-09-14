@@ -226,6 +226,34 @@ app.get("/checkout", middlewares.verifyJWT, async (req, res) => {
   }
 });
 
+app.get("/ordini", middlewares.verifyJWT, async (req, res) => {
+  if (db === null) {
+    return res
+      .status(500)
+      .json({ Error: "Non e' stato possibile connettersi al DB" });
+  }
+
+  if (!req.user) {
+    return res.render("not_found");
+  }
+
+  try {
+ 		const ordini = await orderServices.getOrdiniUtente(db, req.user.sub);
+
+    return res.render("ordini", {
+      ordini,
+      role: req.user.ruolo
+    });
+  } catch (err) {
+    console.error("Errore checkout:", err.message);
+    return res.status(500).json({ Error: "Errore interno." });
+  }
+});
+
+
+
+
+
 app.post("/login", middlewares.validateCredentials, async (req, res) => {
 	try {
 		const { email, password } = req.body;
@@ -513,8 +541,35 @@ app.post("/invia-ordine", middlewares.verifyJWT, async (req, res) => {
 		if (!req.user) {
 			return res.status(401).json({ Error: "Utente non autenticato", redirectUrl: "/access" });
 		}
+		const data = req.body;
 
-	
+		if (
+    	!data ||
+	    typeof data !== 'object' ||
+	    !data.idRistorante ||
+	    typeof data.totale !== 'number' || data.totale <= 0 ||
+	    typeof data.tempoAttesa !== 'number' || data.tempoAttesa < 0 ||
+	    !Array.isArray(data.listaProdotti) || data.listaProdotti.length === 0 ||
+	    !data.listaProdotti.every(p => p && p.idMeal && p.strMeal && typeof p.qty === 'number' && p.qty > 0)
+	  ) {
+	    return res.status(400).json({ Error: "Dati richiesta non validi o incompleti." });
+	  }
+
+		console.log(data.idRistorante);
+		await orderServices.creaOrdineUtente(db, req.user.sub, data);
+
+		return res
+			.status(200)
+			.json({redirectUrl: "/" });
+
+	} catch (err) {
+		console.error("Errore invio ordine:", err.message);
+		const statusCode = err.statusCode || 500;
+		return res
+			.status(statusCode)
+			.json({ Error: err.message || "Errore del server durante l'invio." });
+	}
+
 });
 
 
