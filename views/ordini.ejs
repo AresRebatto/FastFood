@@ -94,6 +94,30 @@
       color: var(--color-neutral-900);
     }
 
+    /* Pulsante primario per la conferma del ritiro */
+    .btn-primary {
+      background-color: var(--color-success);
+      border: 1px solid var(--color-success);
+      color: var(--color-neutral-0);
+      padding: 0.5rem 1rem;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background-color: #2e6336;
+      border-color: #2e6336;
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     .ordini-empty {
       font-family: var(--font-body);
       color: var(--color-neutral-700);
@@ -250,9 +274,7 @@
     /* Card Footer */
     .ordine-card__footer {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-wrap: wrap;
+      flex-direction: column;
       gap: 0.75rem;
       padding-top: 0.85rem;
       border-top: 1px solid var(--color-neutral-200);
@@ -265,6 +287,11 @@
       width: 100%;
       font-family: var(--font-mono);
       font-size: 0.875rem;
+    }
+
+    .ordine-card__actions {
+      display: flex;
+      justify-content: flex-end;
     }
 
     .ordine-timer {
@@ -351,7 +378,6 @@
                   <span>Pronto per il ritiro</span>
                 </template>
 
-                <!-- Se lo stato NON è C -->
                 <template x-if="ordine.stato !== 'C'">
                   <span>
                     <template x-if="ordine.tempo_rimanente > 0">
@@ -365,6 +391,20 @@
               </span>
               <span class="ordine-costo" x-text="'€ ' + Number(ordine.costo).toFixed(2)"></span>
             </div>
+
+            <!-- Azione di conferma ritiro (mostrata solo quando lo stato è '>') -->
+            <template x-if="ordine.stato === '>'">
+              <div class="ordine-card__actions">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  :disabled="loadingId === ordine._id"
+                  @click="confermaRitiro(ordine._id)"
+                >
+                  <span x-text="loadingId === ordine._id ? 'Invio in corso...' : 'Conferma ritiro'"></span>
+                </button>
+              </div>
+            </template>
           </div>
 
         </article>
@@ -378,6 +418,7 @@
     return {
       ordini: [],
       showHistory: false,
+      loadingId: null,
 
       init() {
         this.ordini = JSON.parse(document.getElementById('ordini-data').textContent);
@@ -401,6 +442,31 @@
 
       statusStep(stato) {
         return { O: 0, P: 1, '>': 2, C: 3 }[stato] ?? 0;
+      },
+
+      async confermaRitiro(idOrdine) {
+        this.loadingId = idOrdine;
+
+        try {
+          const res = await fetch('/conferma-ordine', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ idOrdine })
+          });
+
+          if (!res.ok) {
+            throw new Error('Errore durante la conferma dell\'ordine');
+          }
+
+          window.location.reload();
+        } catch (err) {
+          console.error(err);
+          alert('Si è verificato un errore nel confermare il ritiro. Riprova.');
+        } finally {
+          this.loadingId = null;
+        }
       }
     };
   }

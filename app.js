@@ -250,7 +250,29 @@ app.get("/ordini", middlewares.verifyJWT, async (req, res) => {
   }
 });
 
+app.get("/ordini-ricevuti", middlewares.verifyJWT, async (req, res) => {
+  if (db === null) {
+    return res
+      .status(500)
+      .json({ Error: "Non e' stato possibile connettersi al DB" });
+  }
 
+  if (!req.user || req.user.ruolo != "R") {
+    return res.render("not_found");
+  }
+
+  try {
+ 		const ordini = await orderServices.getOrdiniRistoratore(db, req.user.sub);
+
+    return res.render("ordini", {
+      ordini,
+      role: req.user.ruolo
+    });
+  } catch (err) {
+    console.error("Errore checkout:", err.message);
+    return res.status(500).json({ Error: "Errore interno." });
+  }
+});
 
 
 
@@ -572,9 +594,6 @@ app.post("/invia-ordine", middlewares.verifyJWT, async (req, res) => {
 
 });
 
-
-
-
 app.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
 	try {
 		if (db === null) {
@@ -620,7 +639,36 @@ app.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
 	}
 });
 
+app.post("/invia-ordine", middlewares.verifyJWT, async (req, res) => {
+	try {
+		if (db === null) {
+			return res
+				.status(500)
+				.json({ Error: "Non e' stato possibile connettersi al DB" });
+		}
 
+		if (!req.user) {
+			return res.status(401).json({ Error: "Utente non autenticato"});
+		}
+
+		const { idOrdine } = req.body;
+
+		if (!idOrdine) {
+			return res.status(400).json({ Error: "E' richiesto il campo idOrdine"});
+		}
+
+	orderServices.confermaOrdine(db, req.user.sub, idOrdine);
+		
+
+	} catch (err) {
+		console.error("Errore invio ordine:", err.message);
+		const statusCode = err.statusCode || 500;
+		return res
+			.status(statusCode)
+			.json({ Error: err.message || "Errore del server." });
+	}
+
+});
 
 // Middleware di fallback per il 404
 app.use((req, res, next) => {
