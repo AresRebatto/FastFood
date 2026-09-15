@@ -12,7 +12,7 @@
 
   <link rel="stylesheet" href="/css/global.css">
   <link rel="stylesheet" href="/css/ristorante.css">
-  
+
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 
@@ -47,8 +47,8 @@
 
         <% ristorante.menu.forEach(function(piatto, index) { %>
 			<%
-			var currentRestId = ristorante.id || ristorante._id || ristorante.idRistorante || ristorante.codice;
-			var currentMealId = piatto.idMeal || piatto._id || piatto.id || (currentRestId + '-' + index);
+			var currentRestId =  idRistorante ;
+			var currentMealId = piatto.idMeal;
 			%>
 		    <div
 		    class="card"
@@ -70,7 +70,7 @@
 		        alt="<%= piatto.strMeal %>"
 		        class="card-img"
 		    />
-		
+
 		    <div class="card-body">
 		        <div class="card-badges">
 		        <% if (piatto.strCategory) { %>
@@ -80,13 +80,13 @@
 		            <span class="badge-tag"><%= piatto.strTags %></span>
 		        <% } %>
 		        </div>
-		
+
 		        <h3 class="card-title"><%= piatto.strMeal %></h3>
-		
+
 		        <% if (piatto.price !== undefined && piatto.price !== null) { %>
 		        <p class="card-prezzo">€<%= Number(piatto.price).toFixed(2) %></p>
 		        <% } %>
-		
+
 		        <div class="card-actions">
 		        <div class="qty-selector">
 		            <button
@@ -101,7 +101,7 @@
 		            class="qty-btn"
 		            >+</button>
 		        </div>
-		
+
 		        <button
 		            type="button"
 		            class="btn-ordina"
@@ -120,7 +120,7 @@
 		    </div>
 		    </div>
 		<% }) %>
-		
+
 		</div>
       <% } %>
     </section>

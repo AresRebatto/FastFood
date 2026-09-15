@@ -244,7 +244,8 @@ async function searchByRestaurantId(db, id) {
 		nome: ristorante.nome,
     via: ristorante.via,
     n_tell: ristorante.n_tell,
-    menu: (ristorante.menu || []).map((meal) => ({
+		menu: (ristorante.menu || []).map((meal) => ({
+			idMeal: meal.idMeal,
       strMeal: meal.strMeal,
       strCategory: meal.strCategory,
       strMealThumb: meal.strMealThumb,

@@ -179,7 +179,7 @@ app.get("/ristorante/:id", middlewares.verifyJWT, async (req, res) => {
 
 	try {
 		const restaurant = await restaurantServices.searchByRestaurantId(db, restaurantId)
-		res.render("ristorante", { ristorante: restaurant, role: req.user.ruolo });
+		res.render("ristorante", { ristorante: restaurant, role: req.user.ruolo, idRistorante: restaurantId });
 	} catch (error) {
 	 console.error("Errore eliminazione ristorante:", error.message);
     const statusCode = error.statusCode || 500;
@@ -646,6 +646,7 @@ app.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
 			return res.status(400).json({ Error: "E' necessario fornire tutti i campi obbligatori" });
 		}
 
+		console.log(idRistorante);
 		const sum = items.reduce((total, item) => total + ((item.price || 0) * (item.qty || 1)), 0);
 
 		const ordineTemporaneo = {
