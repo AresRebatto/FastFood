@@ -1,0 +1,148 @@
+    :root {
+      --color-primary: #D8402A;
+      --color-primary-dark: #A82F1E;
+      --color-secondary: #1F3D2B;
+      --color-success: #3A7D44;
+      --color-error: #B3261E;
+      --color-neutral-900: #211C1A;
+      --color-neutral-700: #4B4340;
+      --color-neutral-400: #8C8380;
+      --color-neutral-200: #E8E2DD;
+      --color-neutral-100: #F5F1EC;
+      --color-neutral-0: #FFFFFF;
+    }
+
+    [x-cloak] { display: none !important; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--color-neutral-100);
+      color: var(--color-neutral-900);
+      margin: 0;
+      padding: 0;
+    }
+
+    .checkout-container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1.5rem 4rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .checkout-container { grid-template-columns: 1fr; }
+    }
+
+    .checkout-section {
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 14px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.25rem;
+      margin: 0 0 1.2rem 0;
+    }
+
+    /* Prodotti */
+    .order-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.6rem 0;
+      border-bottom: 1px dashed var(--color-neutral-200);
+    }
+    .order-item:last-child { border-bottom: none; }
+
+    .order-item-qty {
+      font-family: 'IBM Plex Mono', monospace;
+      color: var(--color-neutral-400);
+      font-size: 0.85rem;
+      margin-left: 0.4rem;
+    }
+
+    /* Form & Inputs */
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 500; margin-bottom: 0.3rem; }
+    .form-input {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 8px;
+      font-family: inherit;
+      box-sizing: border-box;
+    }
+
+    /* Carte di credito */
+    .card-option {
+      border: 1px solid var(--color-neutral-200);
+      border-radius: 8px;
+      padding: 0.8rem;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      cursor: pointer;
+    }
+    .card-option.selected {
+      border-color: var(--color-primary);
+      background: var(--color-neutral-100);
+    }
+
+    /* Riepilogo Costi e Tempi */
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.6rem;
+      font-size: 0.95rem;
+    }
+    .summary-total {
+      border-top: 2px solid var(--color-neutral-200);
+      padding-top: 0.8rem;
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--color-primary);
+      color: white;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      padding: 0.8rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .btn-submit:disabled {
+      background: var(--color-neutral-400);
+      cursor: not-allowed;
+    }
+
+    .error-box {
+      background: #FDE8E8;
+      border: 1px solid var(--color-error);
+      color: var(--color-error);
+      padding: 0.6rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+    }
+
+    .success-box {
+      background: #E6F4EA;
+      border: 1px solid var(--color-success);
+      color: var(--color-success);
+      padding: 0.8rem;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 0.8rem;
+      text-align: center;
+    }
