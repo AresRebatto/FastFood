@@ -7,12 +7,14 @@
 
 		<!--QUI SOLO I CSS GLOBALI-->
 		<link rel="stylesheet" href="/css/global.css">
-		
+
 	</head>
 
 	<body>
 		<%- include("components/header", {role})%>
 		<%- include("components/search")%>
+		<%- include('components/consigliati', { consigliati }) %>
+		<%- include("components/footer")%>
 		<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
 	</body>
 </html>

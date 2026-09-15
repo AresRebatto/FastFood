@@ -28,12 +28,23 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(cookieParser());
 
-app.get("/", middlewares.verifyJWT, (req, res) => {
-	if (req.user) {
-		res.render("index", { role: req.user.ruolo });
-	} else {
-		res.render("index", { role: null });
-	}
+app.get("/", middlewares.verifyJWT, async (req, res) => {
+ try {
+    let consigliati = [];
+
+    // I consigli hanno senso solo per i clienti, non per i ristoratori
+    if (req.user) {
+      consigliati = await mealServices.getPiattiConsigliati(db, req.user.sub, 8);
+    }
+
+    res.render('index', {
+      role: req.user?.ruolo,
+      consigliati
+    });
+  } catch (error) {
+    console.error('Errore caricamento home:', error);
+    res.render('index', { role: req.user?.ruolo, consigliati: [] });
+  }
 });
 
 app.get("/login", middlewares.verifyJWT, (req, res) => {
@@ -274,6 +285,29 @@ app.get("/ordini-ricevuti", middlewares.verifyJWT, async (req, res) => {
   }
 });
 
+app.get("/statistiche", middlewares.verifyJWT, async (req, res) => {
+  if (db === null) {
+    return res
+      .status(500)
+      .json({ Error: "Non e' stato possibile connettersi al DB" });
+  }
+
+  if (!req.user || req.user.ruolo != "R") {
+    return res.render("not_found");
+  }
+
+  try {
+ 		const statistiche = []; //TODO: scrivere funzione per calcolarlo
+
+		return res.render("statistiche", {
+			statistiche,
+    	role: req.user.ruolo
+    });
+  } catch (err) {
+    console.error("Errore checkout:", err.message);
+    return res.status(500).json({ Error: "Errore interno." });
+  }
+});
 
 
 app.post("/login", middlewares.validateCredentials, async (req, res) => {
@@ -639,7 +673,7 @@ app.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
 	}
 });
 
-app.post("/invia-ordine", middlewares.verifyJWT, async (req, res) => {
+app.post("/conferma-ordine", middlewares.verifyJWT, async (req, res) => {
 	try {
 		if (db === null) {
 			return res
@@ -657,8 +691,9 @@ app.post("/invia-ordine", middlewares.verifyJWT, async (req, res) => {
 			return res.status(400).json({ Error: "E' richiesto il campo idOrdine"});
 		}
 
-	orderServices.confermaOrdine(db, req.user.sub, idOrdine);
-		
+	await orderServices.confermaOrdine(db, req.user.sub, idOrdine);
+
+	return res.status(200).json({ok: true});
 
 	} catch (err) {
 		console.error("Errore invio ordine:", err.message);

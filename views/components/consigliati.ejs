@@ -1,0 +1,211 @@
+<style>
+  .cons-bar {
+    --color-primary: #D8402A;
+    --color-primary-dark: #A82F1E;
+    --color-secondary: #1F3D2B;
+    --color-accent: #F2A93B;
+
+    --color-neutral-900: #211C1A;
+    --color-neutral-700: #4B4340;
+    --color-neutral-400: #8C8380;
+    --color-neutral-200: #E8E2DD;
+    --color-neutral-100: #F5F1EC;
+    --color-neutral-0: #FFFFFF;
+
+    max-width: 980px;
+    margin: 2rem auto;
+    padding: 1.5rem 0;
+    font-family: 'Inter', sans-serif;
+    color: var(--color-neutral-900);
+  }
+
+  .cons-bar__head {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0 0.25rem;
+    margin-bottom: 1rem;
+  }
+
+  .cons-bar__eyebrow {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+    margin: 0 0 0.25rem;
+  }
+
+  .cons-bar__title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 0;
+    color: var(--color-neutral-900);
+  }
+
+  .cons-bar__nav {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  .cons-nav-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--color-neutral-200);
+    background: var(--color-neutral-0);
+    color: var(--color-neutral-900);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .cons-nav-btn:hover {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
+  }
+
+  .cons-bar__track {
+    display: flex;
+    gap: 1rem;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    scroll-snap-type: x proximity;
+    padding: 0.25rem;
+    scrollbar-width: thin;
+  }
+
+  .cons-card {
+    scroll-snap-align: start;
+    flex: 0 0 200px;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-neutral-100);
+    border: 1px solid var(--color-neutral-200);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+  }
+  .cons-card:hover {
+    box-shadow: 0 6px 18px rgba(33, 28, 26, 0.08);
+    transform: translateY(-2px);
+  }
+
+  .cons-card__thumb {
+    width: 100%;
+    height: 120px;
+    object-fit: cover;
+    display: block;
+    background: var(--color-neutral-200);
+  }
+
+  .cons-card__body {
+    padding: 0.75rem 0.9rem 0.4rem;
+    flex: 1;
+  }
+
+  .cons-card__name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem;
+    color: var(--color-neutral-900);
+    line-height: 1.25;
+  }
+
+  .cons-card__resto {
+    font-size: 0.8rem;
+    color: var(--color-neutral-700);
+    margin: 0 0 0.35rem;
+  }
+
+  .cons-card__price {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-secondary);
+    margin: 0;
+  }
+
+  .cons-card__btn {
+    display: block;
+    text-align: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-decoration: none;
+    color: var(--color-neutral-0);
+    background: var(--color-primary);
+    padding: 0.55rem 0.5rem;
+    margin: 0.6rem 0.9rem 0.9rem;
+    border-radius: 6px;
+    transition: background 0.15s ease;
+  }
+  .cons-card__btn:hover {
+    background: var(--color-primary-dark);
+  }
+
+  .cons-bar__empty {
+    display: none;
+  }
+
+  @media (max-width: 600px) {
+    .cons-bar { margin: 1.25rem 0; padding: 1.25rem 0.25rem; }
+    .cons-nav-btn { display: none; }
+  }
+</style>
+
+<section class="cons-bar" x-data="consigliatiBar()" x-show="items.length > 0" x-cloak>
+
+  <div class="cons-bar__head">
+    <div>
+      <p class="cons-bar__eyebrow">Per te</p>
+      <h2 class="cons-bar__title">I tuoi ultimi piatti</h2>
+    </div>
+    <div class="cons-bar__nav">
+      <button type="button" class="cons-nav-btn" @click="scroll(-1)" aria-label="Scorri a sinistra">‹</button>
+      <button type="button" class="cons-nav-btn" @click="scroll(1)" aria-label="Scorri a destra">›</button>
+    </div>
+  </div>
+
+  <div class="cons-bar__track" x-ref="track">
+    <template x-for="item in items" :key="item.idMeal + '-' + item.ristorante_id">
+      <article class="cons-card">
+        <img class="cons-card__thumb" :src="item.strMealThumb" :alt="item.strMeal" loading="lazy">
+        <div class="cons-card__body">
+          <p class="cons-card__name" x-text="item.strMeal"></p>
+          <p class="cons-card__resto" x-text="item.ristorante_nome"></p>
+          <p class="cons-card__price" x-show="item.price !== null" x-text="'€ ' + Number(item.price).toFixed(2)"></p>
+        </div>
+        <a class="cons-card__btn" :href="'/ristorante/' + item.ristorante_id">Vai al ristorante</a>
+      </article>
+    </template>
+  </div>
+
+</section>
+
+<script id="ejs-consigliati-data" type="application/json"><%- JSON.stringify(consigliati || []) %></script>
+
+<script>
+  function consigliatiBar() {
+    return {
+      items: [],
+
+      init() {
+        try {
+          this.items = JSON.parse(document.getElementById('ejs-consigliati-data').textContent);
+        } catch (err) {
+          console.error('Errore nel parsing dei dati consigliati:', err);
+          this.items = [];
+        }
+      },
+
+      scroll(direction) {
+        const track = this.$refs.track;
+        track.scrollBy({ left: direction * 240, behavior: 'smooth' });
+      }
+    };
+  }
+</script>

@@ -1,0 +1,79 @@
+<!-- Style dedicato per il Footer (puoi spostarlo nel tuo global.css) -->
+<style>
+  .site-footer {
+    background-color: var(--color-neutral-0);
+    border-top: 1px solid var(--color-neutral-200);
+    color: var(--color-neutral-700);
+    font-family: var(--font-body);
+    margin-top: auto;
+    padding-block: 2rem;
+  }
+
+  .site-footer__container {
+    max-width: 800px;
+    margin-inline: auto;
+    padding-inline: 1rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 1.25rem;
+  }
+
+  .site-footer__brand-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    color: var(--color-neutral-900);
+    margin: 0 0 0.25rem 0;
+  }
+
+  .site-footer__brand-desc {
+    font-size: 0.875rem;
+    color: var(--color-neutral-700);
+    margin: 0;
+    max-width: 450px;
+    line-height: 1.4;
+  }
+
+  .site-footer__bottom {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--color-neutral-200);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-neutral-400);
+  }
+</style>
+
+<!-- Footer Component -->
+<footer class="site-footer" x-data="footerComponent()">
+  <div class="site-footer__container">
+
+    <!-- Brand & Description -->
+    <div>
+      <h3 class="site-footer__brand-title">FastFood</h3>
+      <p class="site-footer__brand-desc">
+        I tuoi piatti preferiti, consegnati direttamente a casa tua in pochissimo tempo.
+      </p>
+    </div>
+
+    <!-- Bottom Bar -->
+    <div class="site-footer__bottom">
+      <span>&copy; <span x-text="year"></span> FastFood. Tutti i diritti riservati.</span>
+    </div>
+
+  </div>
+</footer>
+
+<!-- Logic Component Alpine.js -->
+<script>
+  function footerComponent() {
+    return {
+      year: new Date().getFullYear()
+    };
+  }
+</script>

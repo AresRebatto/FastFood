@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistiche Ristoranti</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/css/global.css">
+  <!-- Alpine.js CDN -->
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+
+  <style>
+    :root {
+      --color-primary: #D8402A;
+      --color-primary-dark: #A82F1E;
+      --color-secondary: #1F3D2B;
+      --color-success: #3A7D44;
+      --color-error: #B3261E;
+      --color-neutral-900: #211C1A;
+      --color-neutral-700: #4B4340;
+      --color-neutral-400: #8C8380;
+      --color-neutral-200: #E8E2DD;
+      --color-neutral-100: #F5F1EC;
+      --color-neutral-0: #FFFFFF;
+      --color-warning: #D97706;
+      --color-info: #2563EB;
+
+      --font-heading: 'Space Grotesk', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-full: 9999px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    /* Permette di spingere il footer in fondo al viewport */
+    body {
+      background-color: var(--color-neutral-100);
+      color: var(--color-neutral-900);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+      width: 100%;
+    }
+
+    /* flex: 1 spinge il footer verso il basso quando il contenuto è ridotto */
+    .statistiche-page {
+      padding-top: 2rem;
+      padding-bottom: 4rem;
+      flex: 1;
+    }
+
+    .page-title {
+      font-family: var(--font-heading);
+      font-size: 1.75rem;
+      color: var(--color-neutral-900);
+      margin-bottom: 1.5rem;
+    }
+
+    .empty-state {
+      font-family: var(--font-body);
+      color: var(--color-neutral-700);
+      background-color: var(--color-neutral-0);
+      border: 1px dashed var(--color-neutral-200);
+      border-radius: var(--radius-lg);
+      padding: 3rem 1.5rem;
+      text-align: center;
+    }
+
+    .stats-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .stats-toolbar label {
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      color: var(--color-neutral-700);
+      font-weight: 500;
+    }
+
+    .stats-toolbar select {
+      background: var(--color-neutral-0);
+      color: var(--color-neutral-900);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-sm);
+      padding: 0.5rem 0.85rem;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .stats-toolbar select:focus {
+      border-color: var(--color-primary);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .stat-card {
+      background: var(--color-neutral-0);
+      border: 1px solid var(--color-neutral-200);
+      border-radius: var(--radius-lg);
+      padding: 1.25rem 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 2px 4px rgba(33, 28, 26, 0.04);
+      transition: box-shadow 0.2s ease;
+    }
+
+    .stat-card:hover {
+      box-shadow: 0 4px 12px rgba(33, 28, 26, 0.08);
+    }
+
+    .stat-card-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .stat-restaurant-name {
+      font-family: var(--font-heading);
+      font-size: 1.15rem;
+      color: var(--color-neutral-900);
+      margin: 0;
+    }
+
+    .stat-top-dish {
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      color: var(--color-neutral-700);
+    }
+
+    .stat-revenue {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      border-top: 1px dashed var(--color-neutral-200);
+      border-bottom: 1px dashed var(--color-neutral-200);
+      padding: 0.65rem 0;
+    }
+
+    .stat-revenue-label {
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      color: var(--color-neutral-700);
+    }
+
+    .stat-revenue-value {
+      font-family: var(--font-mono);
+      font-size: 1rem;
+      color: var(--color-neutral-900);
+      font-weight: 600;
+    }
+
+    .stat-chart {
+      width: 100%;
+    }
+
+    .stat-chart-bars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 0.5rem;
+      height: 130px;
+    }
+
+    .stat-bar-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      height: 100%;
+    }
+
+    .stat-bar-track {
+      flex: 1;
+      width: 100%;
+      max-width: 28px;
+      display: flex;
+      align-items: flex-end;
+      background: var(--color-neutral-100);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .stat-bar-fill {
+      width: 100%;
+      background: var(--color-primary);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      transition: height 0.25s ease, background-color 0.15s ease;
+      min-height: 3px;
+    }
+
+    .stat-bar-fill--active {
+      background: var(--color-primary-dark);
+    }
+
+    .stat-bar-label {
+      margin-top: 0.4rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--color-neutral-400);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    .stat-bar-tooltip {
+      position: absolute;
+      top: -1.8rem;
+      background: var(--color-neutral-900);
+      color: var(--color-neutral-0);
+      border-radius: var(--radius-sm);
+      padding: 0.2rem 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      white-space: nowrap;
+      z-index: 5;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+
+  <%- include('components/header', { role }) %>
+
+  <main class="container statistiche-page">
+
+    <h1 class="page-title">Statistiche ristoranti</h1>
+
+    <div x-data="statisticheApp()" x-init="init()">
+
+      <!-- Stato Vuoto -->
+      <template x-if="statistiche.length === 0">
+        <p class="empty-state">Non ci sono ancora statistiche disponibili.</p>
+      </template>
+
+      <!-- Controlli di Ordinamento -->
+      <template x-if="statistiche.length > 0">
+        <div class="stats-toolbar">
+          <label for="sortSelect">Ordina per</label>
+          <select id="sortSelect" x-model="sortBy" @change="applySort()">
+            <option value="nome">Nome ristorante</option>
+            <option value="ricavo">Ricavo medio</option>
+          </select>
+        </div>
+      </template>
+
+      <!-- Griglia Schede Ristorante -->
+      <div class="stats-grid">
+        <template x-for="ristorante in statistiche" :key="ristorante.nomeRistorante">
+          <div class="stat-card" x-data="restaurantChart(ristorante.incassoUltimaSettimana)">
+
+            <div class="stat-card-header">
+              <h2 class="stat-restaurant-name" x-text="ristorante.nomeRistorante"></h2>
+              <span class="stat-top-dish" x-text="'🍽️ ' + ristorante.piattoTop"></span>
+            </div>
+
+            <div class="stat-revenue">
+              <span class="stat-revenue-label">Ricavo medio</span>
+              <span class="stat-revenue-value" x-text="formatCurrency(ristorante.ricavoMedio)"></span>
+            </div>
+
+            <div class="stat-chart">
+              <div class="stat-chart-bars">
+                <template x-for="day in days" :key="day.key">
+                  <div
+                    class="stat-bar-wrapper"
+                    @mouseenter="hovered = day.key"
+                    @mouseleave="hovered = null"
+                  >
+                    <div class="stat-bar-tooltip"
+                         x-show="hovered === day.key"
+                         x-cloak
+                         x-text="formatCurrency(values[day.key])">
+                    </div>
+                    <div class="stat-bar-track">
+                      <div
+                        class="stat-bar-fill"
+                        :style="{ height: barHeight(day.key) + '%' }"
+                        :class="{ 'stat-bar-fill--active': hovered === day.key }"
+                      ></div>
+                    </div>
+                    <span class="stat-bar-label" x-text="day.label"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+          </div>
+        </template>
+      </div>
+
+    </div>
+
+  </main>
+
+  <%- include('components/footer') %>
+
+  <!-- Dati Server-Side Iniettati via EJS -->
+  <script type="application/json" id="statistiche-data">
+    <%- JSON.stringify(statistiche || []) %>
+  </script>
+
+  <!-- Logica Componenti Alpine.js -->
+  <script>
+    function statisticheApp() {
+      return {
+        statistiche: [],
+        sortBy: 'nome',
+
+        init() {
+          const raw = document.getElementById('statistiche-data').textContent;
+          this.statistiche = JSON.parse(raw || '[]');
+          this.applySort();
+        },
+
+        formatCurrency(value) {
+          return (value || 0).toLocaleString('it-IT', {
+            style: 'currency',
+            currency: 'EUR'
+          });
+        },
+
+        applySort() {
+          this.statistiche.sort((a, b) => {
+            if (this.sortBy === 'ricavo') {
+              return (b.ricavoMedio || 0) - (a.ricavoMedio || 0);
+            }
+            return (a.nomeRistorante || '').localeCompare(b.nomeRistorante || '');
+          });
+        }
+      };
+    }
+
+    function restaurantChart(incassoUltimaSettimana) {
+      return {
+        hovered: null,
+        values: incassoUltimaSettimana || {},
+        days: [
+          { key: 'lun', label: 'Lun' },
+          { key: 'mar', label: 'Mar' },
+          { key: 'mer', label: 'Mer' },
+          { key: 'gio', label: 'Gio' },
+          { key: 'ven', label: 'Ven' },
+          { key: 'sab', label: 'Sab' },
+          { key: 'dom', label: 'Dom' }
+        ],
+
+        formatCurrency(value) {
+          return (value || 0).toLocaleString('it-IT', {
+            style: 'currency',
+            currency: 'EUR'
+          });
+        },
+
+        maxValue() {
+          const vals = Object.values(this.values).map(v => v || 0);
+          return Math.max(...vals, 1);
+        },
+
+        barHeight(dayKey) {
+          const val = this.values[dayKey] || 0;
+          return Math.max((val / this.maxValue()) * 100, 2);
+        }
+      };
+    }
+  </script>
+
+</body>
+</html>
