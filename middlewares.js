@@ -36,11 +36,6 @@ function validateCredentials(req, res, next) {
 	next();
 }
 
-//Middleware giusto per provare la raggiungibilità degli endpoint
-function VERIFY(req, res, next) {
-	console.log("Richiesta effettuata");
-	next();
-}
 
 
 function verifyJWT(req, res, next) {
@@ -72,16 +67,8 @@ function verifyJWT(req, res, next) {
 	}
 }
 
-//Autorizzazione
-function verifyRole(req, res, next) {
-	//Se, per qualche motivo, la pagina non è registrata nella mappa
-	// l'autorizzazione è NEGATA
-	next();
-}
 
 module.exports = {
 	validateCredentials,
-	VERIFY,
-	verifyJWT,
-	verifyRole,
+	verifyJWT
 };

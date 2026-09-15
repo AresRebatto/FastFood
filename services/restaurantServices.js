@@ -152,6 +152,27 @@ async function deleteRistorante(db, ristoranteId, userId) {
   return { message: "Ristorante eliminato con successo." };
 }
 
+/**
+ * Rimuove tutti gli ordini relativi a un determinato ristorante da tutti gli utenti.
+ * @param {string|ObjectId} ristoranteId - L'ID del ristorante da rimuovere dagli ordini.
+ * @param {Db} db - L'istanza del database MongoDB.
+ * @returns {Promise<UpdateResult>}
+ */
+async function eliminaOrdiniRistorante(db, ristoranteId) {
+  const idStr = ristoranteId.toString();
+
+  const result = await db.collection('Utente').updateMany(
+    { "ordini.ristorante_id": idStr }, // Filtra solo gli utenti che hanno ordinato da quel ristorante
+    { 
+      $pull: { 
+        ordini: { ristorante_id: idStr } // Se la proprietà nell'ordine ha un nome diverso (es. ristoranteId), adatta questo campo
+      } 
+    }
+  );
+
+  return result;
+}
+
 async function searchByKind(db, kind, q) {
 	const queryRegex = new RegExp(q.trim(), 'i');
 	console.log(queryRegex);
@@ -260,5 +281,6 @@ module.exports = {
 	updateRistorante,
 	deleteRistorante,
 	searchByKind,
-  searchByRestaurantId
+	searchByRestaurantId,
+  eliminaOrdiniRistorante
 };

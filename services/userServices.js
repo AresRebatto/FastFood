@@ -1,4 +1,4 @@
-const utils = require("./../utils");
+const utils = require("../utils/authUtils");
 
 async function findUserByEmail(db, email) {
     if (!email || typeof email !== 'string') {

@@ -127,6 +127,43 @@ async function getStatisticheRistoratore(db, ristoratoreId) {
   }
 }
 
+/**
+ * Elimina tutti i ristoranti associati a un ristoratore e ripulisce
+ * tutti gli ordini ad essi collegati presenti nella collection Utente.
+ * @param {string|ObjectId} ristoratoreId - L'ID del ristoratore.
+ * @param {Db} db - L'istanza del database MongoDB.
+ */
+async function eliminaRistorantiDaRistoratore(ristoratoreId, db) {
+  const idStr = ristoratoreId.toString();
+
+
+  const ristoranti = await db.collection('Ristorante')
+    .find({ ristoratore_id: idStr }, { projection: { _id: 1 } })
+    .toArray();
+
+  if (ristoranti.length > 0) {
+    const ristorantiIds = ristoranti.map(r => r._id.toString());
+
+    await db.collection('Utente').updateMany(
+      { "ordini.ristorante_id": { $in: ristorantiIds } },
+      {
+        $pull: {
+          ordini: { ristorante_id: { $in: ristorantiIds } }
+        }
+      }
+    );
+
+    const deleteResult = await db.collection('Ristorante').deleteMany({
+      ristoratore_id: idStr
+    });
+
+    return deleteResult;
+  }
+
+  return { deletedCount: 0 };
+}
+
 module.exports = {
-	getStatisticheRistoratore
+	getStatisticheRistoratore,
+	eliminaRistorantiDaRistoratore
 }

@@ -1,290 +1,109 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ordini in Arrivo</title>
+
+  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&family=Space+Grotesk:wght@600;700&display=swap" rel="stylesheet" />
 
-  <link rel="stylesheet" href="/css/global.css">
+  <!-- CSS -->
+  <link rel="stylesheet" href="/css/global.css" />
+  <link rel="stylesheet" href="/css/ordini-ricevuti.css" />
 
   <!-- Alpine.js -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body>
 
+  <%- include('components/header', {role}) %>
 
-<%- include('components/header', {role}) %>
+  <main class="container ordini-page" x-data="ordiniRistorante()" x-init="init()" x-cloak>
 
-<main class="container ordini-page" x-data="ordiniRistorante()" x-init="init()" x-cloak>
+    <div class="ordini-page__head">
+      <h1 class="ordini-page__title">Ordini in arrivo</h1>
+      <button
+        type="button"
+        class="btn btn-outline btn-sm"
+        @click="showHistory = !showHistory"
+      >
+        <span x-text="showHistory ? 'Nascondi ordini precedenti' : 'Vedi anche ordini precedenti'"></span>
+      </button>
+    </div>
 
-  <div class="ordini-page__head">
-    <h1 class="ordini-page__title">Ordini in arrivo</h1>
-    <button
-      type="button"
-      class="btn btn-outline btn-sm"
-      @click="showHistory = !showHistory"
-    >
-      <span x-text="showHistory ? 'Nascondi ordini precedenti' : 'Vedi anche ordini precedenti'"></span>
-    </button>
-  </div>
-
-  <template x-if="ordiniFiltrati.length === 0">
-    <p class="ordini-empty">Nessun ordine in corso al momento.</p>
-  </template>
-
-  <div class="ordini-list">
-    <template x-for="ordine in ordiniFiltrati" :key="ordine._id">
-      <article class="ordine-card" :class="{ 'ordine-card--done': ordine.stato === 'C' }">
-
-        <div class="ordine-card__top">
-          <div>
-            <h2 class="ordine-card__ristorante" x-text="ordine.nome_ristorante"></h2>
-            <p class="ordine-card__via">
-              <svg class="ordine-card__pin" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 21s-7-6.5-7-11.5a7 7 0 1 1 14 0C19 14.5 12 21 12 21z"/>
-                <circle cx="12" cy="9.5" r="2.3"/>
-              </svg>
-              <span x-text="ordine.via_ristorante"></span>
-            </p>
-          </div>
-          <span class="stato-badge" :class="'stato-badge--' + ordine.stato" x-text="statusLabel(ordine.stato)"></span>
-        </div>
-
-        <div class="ordine-stepper" role="progressbar" :aria-valuenow="statusStep(ordine.stato)" aria-valuemin="0" aria-valuemax="3">
-          <div class="ordine-stepper__track">
-            <div class="ordine-stepper__fill" :style="`width: ${(statusStep(ordine.stato) / 3) * 100}%`"></div>
-          </div>
-          <div class="ordine-stepper__labels">
-            <span :class="{ 'is-active': statusStep(ordine.stato) >= 0 }">Ordinato</span>
-            <span :class="{ 'is-active': statusStep(ordine.stato) >= 1 }">In preparazione</span>
-            <span :class="{ 'is-active': statusStep(ordine.stato) >= 2 }">In consegna</span>
-            <span :class="{ 'is-active': statusStep(ordine.stato) >= 3 }">Consegnato</span>
-          </div>
-        </div>
-
-        <ul class="ordine-piatti">
-          <template x-for="piatto in ordine.piatti" :key="piatto.strMeal">
-            <li>
-              <span class="ordine-piatti__qty" x-text="'x' + piatto.qty"></span>
-              <span x-text="piatto.strMeal"></span>
-            </li>
-          </template>
-        </ul>
-
-        <div class="ordine-card__footer">
-          <div class="ordine-card__meta">
-            <template x-if="ordine.stato !== 'C'">
-              <span class="ordine-timer" :class="{ 'ordine-timer--ready': ordine.tempo_rimanente <= 0 }">
-                <template x-if="ordine.tempo_rimanente > 0">
-                  <span x-text="ordine.tempo_rimanente + ' min rimanenti'"></span>
-                </template>
-                <template x-if="ordine.tempo_rimanente <= 0">
-                  <span>Pronto per il ritiro</span>
-                </template>
-              </span>
-            </template>
-            <span class="ordine-costo" x-text="'€ ' + Number(ordine.costo).toFixed(2)"></span>
-          </div>
-        </div>
-
-      </article>
+    <template x-if="ordiniFiltrati.length === 0">
+      <p class="ordini-empty">Nessun ordine in corso al momento.</p>
     </template>
-  </div>
 
-</main>
+    <div class="ordini-list">
+      <template x-for="ordine in ordiniFiltrati" :key="ordine._id">
+        <article class="ordine-card" :class="{ 'ordine-card--done': ordine.stato === 'C' }">
 
-<script>
-function ordiniRistorante() {
-  return {
-    ordini: [],
-    showHistory: false,
+          <div class="ordine-card__top">
+            <div>
+              <h2 class="ordine-card__ristorante" x-text="ordine.nome_ristorante"></h2>
+              <p class="ordine-card__via">
+                <svg class="ordine-card__pin" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 21s-7-6.5-7-11.5a7 7 0 1 1 14 0C19 14.5 12 21 12 21z"/>
+                  <circle cx="12" cy="9.5" r="2.3"/>
+                </svg>
+                <span x-text="ordine.via_ristorante"></span>
+              </p>
+            </div>
+            <span class="stato-badge" :class="'stato-badge--' + ordine.stato" x-text="statusLabel(ordine.stato)"></span>
+          </div>
 
-    init() {
-      this.ordini = JSON.parse(document.getElementById('ordini-data').textContent);
+          <div class="ordine-stepper" role="progressbar" :aria-valuenow="statusStep(ordine.stato)" aria-valuemin="0" aria-valuemax="3">
+            <div class="ordine-stepper__track">
+              <div class="ordine-stepper__fill" :style="`width: ${(statusStep(ordine.stato) / 3) * 100}%`"></div>
+            </div>
+            <div class="ordine-stepper__labels">
+              <span :class="{ 'is-active': statusStep(ordine.stato) >= 0 }">Ordinato</span>
+              <span :class="{ 'is-active': statusStep(ordine.stato) >= 1 }">In preparazione</span>
+              <span :class="{ 'is-active': statusStep(ordine.stato) >= 2 }">In consegna</span>
+              <span :class="{ 'is-active': statusStep(ordine.stato) >= 3 }">Consegnato</span>
+            </div>
+          </div>
 
-      // Stesso countdown "spannometrico" della pagina cliente, solo per coerenza visiva.
-      setInterval(() => {
-        this.ordini.forEach(o => {
-          if (o.stato !== 'C' && o.tempo_rimanente > 0) o.tempo_rimanente--;
-        });
-      }, 60000);
-    },
+          <ul class="ordine-piatti">
+            <template x-for="piatto in ordine.piatti" :key="piatto.strMeal">
+              <li>
+                <span class="ordine-piatti__qty" x-text="'x' + piatto.qty"></span>
+                <span x-text="piatto.strMeal"></span>
+              </li>
+            </template>
+          </ul>
 
-    get ordiniFiltrati() {
-      return this.showHistory
-        ? this.ordini
-        : this.ordini.filter(o => o.stato !== 'C');
-    },
+          <div class="ordine-card__footer">
+            <div class="ordine-card__meta">
+              <template x-if="ordine.stato !== 'C'">
+                <span class="ordine-timer" :class="{ 'ordine-timer--ready': ordine.tempo_rimanente <= 0 }">
+                  <template x-if="ordine.tempo_rimanente > 0">
+                    <span x-text="ordine.tempo_rimanente + ' min rimanenti'"></span>
+                  </template>
+                  <template x-if="ordine.tempo_rimanente <= 0">
+                    <span>Pronto per il ritiro</span>
+                  </template>
+                </span>
+              </template>
+              <span class="ordine-costo" x-text="'€ ' + Number(ordine.costo).toFixed(2)"></span>
+            </div>
+          </div>
 
-    statusLabel(stato) {
-      return { O: 'Ordinato', P: 'In preparazione', '>': 'In consegna', C: 'Consegnato' }[stato] ?? stato;
-    },
+        </article>
+      </template>
+    </div>
 
-    statusStep(stato) {
-      return { O: 0, P: 1, '>': 2, C: 3 }[stato] ?? 0;
-    }
-  };
-}
-</script>
+  </main>
+  <%- include("components/footer")%>
+  <script type="application/json" id="ordini-data">
+    <%- JSON.stringify(ordini) %>
+  </script>
 
-<style>
-  [x-cloak] { display: none !important; }
+  <script src="/js/ordini-ricevuti.js"></script>
 
-  .ordini-page {
-    padding-block: 2rem 4rem;
-  }
-
-  .ordini-page__head {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-    flex-wrap: wrap;
-    margin-bottom: 1.5rem;
-  }
-
-  .ordini-page__title {
-    font-family: var(--font-heading, 'Space Grotesk', sans-serif);
-    font-size: 1.75rem;
-    color: var(--color-text, #eef2ec);
-    margin: 0;
-  }
-
-  .ordini-empty {
-    font-family: var(--font-body, 'Inter', sans-serif);
-    color: var(--color-text-muted, #9fae9c);
-    padding: 2rem 0;
-    text-align: center;
-  }
-
-  .ordini-list {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .ordine-card {
-    background: var(--color-surface, #223327);
-    border: 1px solid var(--color-border, #33452f);
-    border-radius: var(--radius-lg, 14px);
-    padding: 1.25rem 1.5rem;
-    font-family: var(--font-body, 'Inter', sans-serif);
-    color: var(--color-text, #eef2ec);
-    transition: opacity .2s ease;
-  }
-
-  .ordine-card--done {
-    opacity: .65;
-  }
-
-  .ordine-card__top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  .ordine-card__ristorante {
-    font-family: var(--font-heading, 'Space Grotesk', sans-serif);
-    font-size: 1.15rem;
-    margin: 0 0 .25rem;
-  }
-
-  .ordine-card__via {
-    display: flex;
-    align-items: center;
-    gap: .35rem;
-    margin: 0;
-    color: var(--color-text-muted, #9fae9c);
-    font-size: .875rem;
-  }
-
-  .ordine-card__pin { flex-shrink: 0; }
-
-  .stato-badge {
-    flex-shrink: 0;
-    padding: .3rem .7rem;
-    border-radius: 999px;
-    font-size: .75rem;
-    font-weight: 600;
-    letter-spacing: .02em;
-    white-space: nowrap;
-  }
-
-  .stato-badge--O { background: rgba(159,174,156,.18); color: var(--color-text-muted, #9fae9c); }
-  .stato-badge--P { background: rgba(212,161,47,.2); color: var(--color-primary, #d4a12f); }
-  .stato-badge--\> { background: rgba(212,161,47,.35); color: var(--color-primary, #d4a12f); }
-  .stato-badge--C { background: rgba(120,178,120,.2); color: #8fce8f; }
-
-  .ordine-stepper {
-    margin: 1rem 0;
-  }
-
-  .ordine-stepper__track {
-    height: 4px;
-    background: var(--color-border, #33452f);
-    border-radius: 999px;
-    overflow: hidden;
-  }
-
-  .ordine-stepper__fill {
-    height: 100%;
-    background: var(--color-primary, #d4a12f);
-    transition: width .4s ease;
-  }
-
-  .ordine-stepper__labels {
-    display: flex;
-    justify-content: space-between;
-    margin-top: .4rem;
-    font-size: .7rem;
-    color: var(--color-text-muted, #9fae9c);
-  }
-
-  .ordine-stepper__labels .is-active {
-    color: var(--color-primary, #d4a12f);
-    font-weight: 600;
-  }
-
-  .ordine-piatti {
-    list-style: none;
-    margin: 0 0 1rem;
-    padding: 0;
-    display: flex;
-    flex-direction: column;
-    gap: .3rem;
-    font-size: .9rem;
-  }
-
-  .ordine-piatti li {
-    display: flex;
-    gap: .5rem;
-  }
-
-  .ordine-piatti__qty {
-    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
-    color: var(--color-primary, #d4a12f);
-  }
-
-  .ordine-card__footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    gap: .75rem;
-    padding-top: .75rem;
-    border-top: 1px solid var(--color-border, #33452f);
-  }
-
-  .ordine-card__meta {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    font-family: var(--font-mono, 'IBM Plex Mono', monospace);
-    font-size: .85rem;
-  }
-
-  .ordine-timer--ready {
-    color: var(--color-primary, #d4a12f);
-    font-weight: 600;
-  }
-</style>
-
-<script type="application/json" id="ordini-data">
-  <%- JSON.stringify(ordini) %>
-</script>
+</body>
+</html>

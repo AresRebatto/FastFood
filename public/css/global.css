@@ -2,6 +2,10 @@ body {
 	margin: 0;
 	font-family: "Inter", "General Sans", sans-serif;
 	color: #211c1a;
+
+	min-height: 100vh;
+	display: flex;
+	flex-direction: column;
 }
 
 *,

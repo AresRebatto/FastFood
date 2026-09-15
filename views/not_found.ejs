@@ -1,108 +1,25 @@
 <!DOCTYPE html>
 <html lang="it">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pagina non trovata — FastFood</title>
-<style>
-:root {
-  --color-primary: #D8402A;
-  --color-primary-dark: #A82F1E;
-  --color-neutral-900: #211C1A;
-  --color-neutral-700: #4B4340;
-  --color-neutral-100: #F5F1EC;
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Pagina non trovata — FastFood</title>
+	
+	<link rel="stylesheet" href="/css/not-found.css">
+	<link rel="stylesheet" href="/css/global.css">
+	
+	</head>
+	<body>
 
-  --font-display: "Space Grotesk", "Cabinet Grotesk", sans-serif;
-  --font-body: "Inter", "General Sans", sans-serif;
-
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-6: 24px;
-  --space-8: 32px;
-
-  --radius-md: 12px;
-}
-
-* { box-sizing: border-box; }
-
-body {
-  margin: 0;
-  font-family: var(--font-body);
-  color: var(--color-neutral-900);
-  background: var(--color-neutral-100);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
-}
-
-a { color: inherit; text-decoration: none; }
-
-:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-
-.btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-3) var(--space-6);
-  border-radius: var(--radius-md);
-  font-weight: 600;
-  font-size: 0.95rem;
-  border: none;
-  transition: background 0.15s ease;
-}
-.btn-primary { background: var(--color-primary); color: #fff; }
-.btn-primary:hover { background: var(--color-primary-dark); }
-
-.not-found {
-  min-height: 100dvh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-8) var(--space-4);
-  text-align: center;
-}
-
-.not-found-code {
-  font-family: var(--font-display);
-  font-size: 6rem;
-  font-weight: 700;
-  color: var(--color-primary);
-  line-height: 1;
-}
-
-.not-found h1 {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin: var(--space-4) 0 0;
-}
-
-.not-found p {
-  margin: var(--space-3) 0 0;
-  color: var(--color-neutral-700);
-  max-width: 40ch;
-  margin-inline: auto;
-}
-
-.not-found .btn {
-  margin-top: var(--space-8);
-}
-</style>
-</head>
-<body>
-
-<main class="not-found">
-  <div>
-    <p class="not-found-code">404</p>
-    <h1>Pagina non trovata</h1>
-    <p>La pagina che cerchi non esiste, è stata spostata o non sei autorizzato
-    a entrarvici.</p>
-    <a href="/" class="btn btn-primary">Torna alla home</a>
-  </div>
-</main>
+	<main class="not-found">
+	  <div>
+	    <p class="not-found-code">404</p>
+	    <h1>Pagina non trovata</h1>
+	    <p>La pagina che cerchi non esiste, è stata spostata o non sei autorizzato
+	    a entrarvici.</p>
+	    <a href="/" class="btn btn-primary">Torna alla home</a>
+	  </div>
+	</main>
 
 </body>
 </html>

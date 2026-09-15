@@ -4,245 +4,245 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Accedi o registrati — FastFood</title>
-	<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
+	
 	<link rel="stylesheet" href="/css/access.css">
 	</head>
 <body>
-<script src="/js/access.js"></script>
-<main class="auth-page" x-data="authPage('<%= mode %>')">
 
-  <section class="auth-panel">
-    <div class="auth-card">
-
-      <div class="auth-tabs" role="tablist" aria-label="Scegli accedi o registrati">
-        <button
-          type="button"
-          class="auth-tab"
-          role="tab"
-          :aria-selected="mode === 'login'"
-          @click="switchMode('login')">
-          Accedi
-        </button>
-        <button
-          type="button"
-          class="auth-tab"
-          role="tab"
-          :aria-selected="mode === 'signup'"
-          @click="switchMode('signup')">
-          Registrati
-        </button>
-      </div>
-
-      <div class="auth-card-inner">
-
-        <!-- ===================== LOGIN ===================== -->
-        <template x-if="mode === 'login'">
-          <div>
-            <h2>Bentornato</h2>
-            <p class="auth-card-sub">Accedi per continuare a ordinare.</p>
-
-            <form @submit.prevent="submitLogin" novalidate>
-            	<p class="field-error" x-show="formError" x-text="formError" style="margin-bottom: var(--space-4);"></p>
-              <div class="field-group">
-                <label class="field-label" for="login-email">Email</label>
-                <div class="field-input-wrap" :class="{ 'has-error': errors.loginEmail }">
-                  <input
-                    id="login-email"
-                    type="email"
-                    autocomplete="email"
-                    placeholder="nome@esempio.it"
-                    x-model="login.email"
-                    @input="errors.loginEmail = ''"
-                    :aria-invalid="!!errors.loginEmail">
-                </div>
-                <p class="field-error" x-show="errors.loginEmail" x-text="errors.loginEmail"></p>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label" for="login-password">Password</label>
-                <div class="field-input-wrap" :class="{ 'has-error': errors.loginPassword }">
-                  <input
-                    id="login-password"
-                    :type="showLoginPassword ? 'text' : 'password'"
-                    autocomplete="current-password"
-                    placeholder="••••••••"
-                    x-model="login.password"
-                    @input="errors.loginPassword = ''"
-                    :aria-invalid="!!errors.loginPassword">
-                  <button
-                    type="button"
-                    class="icon-btn field-toggle-visibility"
-                    @click="showLoginPassword = !showLoginPassword"
-                    :aria-label="showLoginPassword ? 'Nascondi password' : 'Mostra password'">
-                    <span x-text="showLoginPassword ? '🙈' : '👁️'" aria-hidden="true"></span>
-                  </button>
-                </div>
-                <p class="field-error" x-show="errors.loginPassword" x-text="errors.loginPassword"></p>
-              </div>
-
-              <div class="field-inline-row">
-                <label class="checkbox-row">
-                  <input type="checkbox" x-model="login.remember">
-                  Ricordami
-                </label>
-              </div>
-
-              <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
-                <span x-show="loading" class="spinner" aria-hidden="true"></span>
-                <span x-text="loading ? 'Accesso in corso…' : 'Accedi'"></span>
-              </button>
-            </form>
-
-            <p class="auth-switch">
-              Non hai un account?
-              <button type="button" @click="switchMode('signup')">Registrati</button>
-            </p>
-          </div>
-        </template>
-
-        <!-- ===================== SIGNUP ===================== -->
-        <template x-if="mode === 'signup'">
-          <div>
-            <h2>Crea il tuo account</h2>
-            <p class="auth-card-sub">Bastano due minuti, poi si ordina.</p>
-
-            <form @submit.prevent="submitSignup" novalidate>
-            	<p class="field-error" x-show="formError" x-text="formError" style="margin-bottom: var(--space-4);"></p>
-              <div class="role-select" role="radiogroup" aria-label="Tipo di account">
-                <button
-                  type="button"
-                  class="role-option"
-                  role="radio"
-                  :aria-checked="signup.accountType === 'customer'"
-                  @click="signup.accountType = 'customer'">
-                  <span class="role-option-icon" aria-hidden="true">🍽️</span>
-                  <span class="role-option-label">Cliente</span>
-                </button>
-                <button
-                  type="button"
-                  class="role-option"
-                  role="radio"
-                  :aria-checked="signup.accountType === 'restaurant'"
-                  @click="signup.accountType = 'restaurant'">
-                  <span class="role-option-icon" aria-hidden="true">🧑‍🍳</span>
-                  <span class="role-option-label">Ristoratore</span>
-                </button>
-              </div>
-
-              <div class="field-row">
-                <div class="field-group">
-                  <label class="field-label" for="signup-firstname">Nome</label>
-                  <div class="field-input-wrap" :class="{ 'has-error': errors.firstName }">
-                    <input
-                      id="signup-firstname"
-                      type="text"
-                      autocomplete="given-name"
-                      placeholder="Mario"
-                      x-model="signup.firstName"
-                      @input="errors.firstName = ''"
-                      :aria-invalid="!!errors.firstName">
-                  </div>
-                  <p class="field-error" x-show="errors.firstName" x-text="errors.firstName"></p>
-                </div>
-                <div class="field-group">
-                  <label class="field-label" for="signup-lastname">Cognome</label>
-                  <div class="field-input-wrap" :class="{ 'has-error': errors.lastName }">
-                    <input
-                      id="signup-lastname"
-                      type="text"
-                      autocomplete="family-name"
-                      placeholder="Rossi"
-                      x-model="signup.lastName"
-                      @input="errors.lastName = ''"
-                      :aria-invalid="!!errors.lastName">
-                  </div>
-                  <p class="field-error" x-show="errors.lastName" x-text="errors.lastName"></p>
-                </div>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label" for="signup-email">Email</label>
-                <div class="field-input-wrap" :class="{ 'has-error': errors.email }">
-                  <input
-                    id="signup-email"
-                    type="email"
-                    autocomplete="email"
-                    placeholder="nome@esempio.it"
-                    x-model="signup.email"
-                    @input="errors.email = ''"
-                    :aria-invalid="!!errors.email">
-                </div>
-                <p class="field-error" x-show="errors.email" x-text="errors.email"></p>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label" for="signup-password">Password</label>
-                <div class="field-input-wrap" :class="{ 'has-error': errors.password }">
-                  <input
-                    id="signup-password"
-                    :type="showSignupPassword ? 'text' : 'password'"
-                    autocomplete="new-password"
-                    placeholder="Minimo 8 caratteri"
-                    x-model="signup.password"
-                    @input="errors.password = ''"
-                    :aria-invalid="!!errors.password">
-                  <button
-                    type="button"
-                    class="icon-btn field-toggle-visibility"
-                    @click="showSignupPassword = !showSignupPassword"
-                    :aria-label="showSignupPassword ? 'Nascondi password' : 'Mostra password'">
-                    <span x-text="showSignupPassword ? '🙈' : '👁️'" aria-hidden="true"></span>
-                  </button>
-                </div>
-                <p class="field-error" x-show="errors.password" x-text="errors.password"></p>
-
-                <!-- password strength: same color language as .ticket-status -->
-                <div class="strength-meter" x-show="signup.password.length > 0">
-                  <div class="strength-bars">
-                    <div class="strength-bar" :style="strengthBarStyle(0)"></div>
-                    <div class="strength-bar" :style="strengthBarStyle(1)"></div>
-                    <div class="strength-bar" :style="strengthBarStyle(2)"></div>
-                  </div>
-                  <span class="strength-label" x-text="strengthLabel"></span>
-                </div>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label" for="signup-password-confirm">Conferma password</label>
-                <div class="field-input-wrap" :class="{ 'has-error': errors.passwordConfirm }">
-                  <input
-                    id="signup-password-confirm"
-                    type="password"
-                    autocomplete="new-password"
-                    placeholder="Ripeti la password"
-                    x-model="signup.passwordConfirm"
-                    @input="errors.passwordConfirm = ''"
-                    :aria-invalid="!!errors.passwordConfirm">
-                </div>
-                <p class="field-error" x-show="errors.passwordConfirm" x-text="errors.passwordConfirm"></p>
-              </div>
-
-              <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
-                <span x-show="loading" class="spinner" aria-hidden="true"></span>
-                <span x-text="loading ? 'Creazione account…' : 'Crea account'"></span>
-              </button>
-            </form>
-
-            <p class="auth-switch">
-              Hai già un account?
-              <button type="button" @click="switchMode('login')">Accedi</button>
-            </p>
-          </div>
-        </template>
-
-      </div>
-    </div>
-  </section>
-</main>
-
-
+	<main class="auth-page" x-data="authPage('<%= mode %>')">
+	
+	  <section class="auth-panel">
+	    <div class="auth-card">
+	
+	      <div class="auth-tabs" role="tablist" aria-label="Scegli accedi o registrati">
+	        <button
+	          type="button"
+	          class="auth-tab"
+	          role="tab"
+	          :aria-selected="mode === 'login'"
+	          @click="switchMode('login')">
+	          Accedi
+	        </button>
+	        <button
+	          type="button"
+	          class="auth-tab"
+	          role="tab"
+	          :aria-selected="mode === 'signup'"
+	          @click="switchMode('signup')">
+	          Registrati
+	        </button>
+	      </div>
+	
+	      <div class="auth-card-inner">
+	
+	        <!-- ===================== LOGIN ===================== -->
+	        <template x-if="mode === 'login'">
+	          <div>
+	            <h2>Bentornato</h2>
+	            <p class="auth-card-sub">Accedi per continuare a ordinare.</p>
+	
+	            <form @submit.prevent="submitLogin" novalidate>
+	            	<p class="field-error" x-show="formError" x-text="formError" style="margin-bottom: var(--space-4);"></p>
+	              <div class="field-group">
+	                <label class="field-label" for="login-email">Email</label>
+	                <div class="field-input-wrap" :class="{ 'has-error': errors.loginEmail }">
+	                  <input
+	                    id="login-email"
+	                    type="email"
+	                    autocomplete="email"
+	                    placeholder="nome@esempio.it"
+	                    x-model="login.email"
+	                    @input="errors.loginEmail = ''"
+	                    :aria-invalid="!!errors.loginEmail">
+	                </div>
+	                <p class="field-error" x-show="errors.loginEmail" x-text="errors.loginEmail"></p>
+	              </div>
+	
+	              <div class="field-group">
+	                <label class="field-label" for="login-password">Password</label>
+	                <div class="field-input-wrap" :class="{ 'has-error': errors.loginPassword }">
+	                  <input
+	                    id="login-password"
+	                    :type="showLoginPassword ? 'text' : 'password'"
+	                    autocomplete="current-password"
+	                    placeholder="••••••••"
+	                    x-model="login.password"
+	                    @input="errors.loginPassword = ''"
+	                    :aria-invalid="!!errors.loginPassword">
+	                  <button
+	                    type="button"
+	                    class="icon-btn field-toggle-visibility"
+	                    @click="showLoginPassword = !showLoginPassword"
+	                    :aria-label="showLoginPassword ? 'Nascondi password' : 'Mostra password'">
+	                    <span x-text="showLoginPassword ? '🙈' : '👁️'" aria-hidden="true"></span>
+	                  </button>
+	                </div>
+	                <p class="field-error" x-show="errors.loginPassword" x-text="errors.loginPassword"></p>
+	              </div>
+	
+	              <div class="field-inline-row">
+	                <label class="checkbox-row">
+	                  <input type="checkbox" x-model="login.remember">
+	                  Ricordami
+	                </label>
+	              </div>
+	
+	              <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
+	                <span x-show="loading" class="spinner" aria-hidden="true"></span>
+	                <span x-text="loading ? 'Accesso in corso…' : 'Accedi'"></span>
+	              </button>
+	            </form>
+	
+	            <p class="auth-switch">
+	              Non hai un account?
+	              <button type="button" @click="switchMode('signup')">Registrati</button>
+	            </p>
+	          </div>
+	        </template>
+	
+	        <!-- ===================== SIGNUP ===================== -->
+	        <template x-if="mode === 'signup'">
+	          <div>
+	            <h2>Crea il tuo account</h2>
+	            <p class="auth-card-sub">Bastano due minuti, poi si ordina.</p>
+	
+	            <form @submit.prevent="submitSignup" novalidate>
+	            	<p class="field-error" x-show="formError" x-text="formError" style="margin-bottom: var(--space-4);"></p>
+	              <div class="role-select" role="radiogroup" aria-label="Tipo di account">
+	                <button
+	                  type="button"
+	                  class="role-option"
+	                  role="radio"
+	                  :aria-checked="signup.accountType === 'customer'"
+	                  @click="signup.accountType = 'customer'">
+	                  <span class="role-option-icon" aria-hidden="true">🍽️</span>
+	                  <span class="role-option-label">Cliente</span>
+	                </button>
+	                <button
+	                  type="button"
+	                  class="role-option"
+	                  role="radio"
+	                  :aria-checked="signup.accountType === 'restaurant'"
+	                  @click="signup.accountType = 'restaurant'">
+	                  <span class="role-option-icon" aria-hidden="true">🧑‍🍳</span>
+	                  <span class="role-option-label">Ristoratore</span>
+	                </button>
+	              </div>
+	
+	              <div class="field-row">
+	                <div class="field-group">
+	                  <label class="field-label" for="signup-firstname">Nome</label>
+	                  <div class="field-input-wrap" :class="{ 'has-error': errors.firstName }">
+	                    <input
+	                      id="signup-firstname"
+	                      type="text"
+	                      autocomplete="given-name"
+	                      placeholder="Mario"
+	                      x-model="signup.firstName"
+	                      @input="errors.firstName = ''"
+	                      :aria-invalid="!!errors.firstName">
+	                  </div>
+	                  <p class="field-error" x-show="errors.firstName" x-text="errors.firstName"></p>
+	                </div>
+	                <div class="field-group">
+	                  <label class="field-label" for="signup-lastname">Cognome</label>
+	                  <div class="field-input-wrap" :class="{ 'has-error': errors.lastName }">
+	                    <input
+	                      id="signup-lastname"
+	                      type="text"
+	                      autocomplete="family-name"
+	                      placeholder="Rossi"
+	                      x-model="signup.lastName"
+	                      @input="errors.lastName = ''"
+	                      :aria-invalid="!!errors.lastName">
+	                  </div>
+	                  <p class="field-error" x-show="errors.lastName" x-text="errors.lastName"></p>
+	                </div>
+	              </div>
+	
+	              <div class="field-group">
+	                <label class="field-label" for="signup-email">Email</label>
+	                <div class="field-input-wrap" :class="{ 'has-error': errors.email }">
+	                  <input
+	                    id="signup-email"
+	                    type="email"
+	                    autocomplete="email"
+	                    placeholder="nome@esempio.it"
+	                    x-model="signup.email"
+	                    @input="errors.email = ''"
+	                    :aria-invalid="!!errors.email">
+	                </div>
+	                <p class="field-error" x-show="errors.email" x-text="errors.email"></p>
+	              </div>
+	
+	              <div class="field-group">
+	                <label class="field-label" for="signup-password">Password</label>
+	                <div class="field-input-wrap" :class="{ 'has-error': errors.password }">
+	                  <input
+	                    id="signup-password"
+	                    :type="showSignupPassword ? 'text' : 'password'"
+	                    autocomplete="new-password"
+	                    placeholder="Minimo 8 caratteri"
+	                    x-model="signup.password"
+	                    @input="errors.password = ''"
+	                    :aria-invalid="!!errors.password">
+	                  <button
+	                    type="button"
+	                    class="icon-btn field-toggle-visibility"
+	                    @click="showSignupPassword = !showSignupPassword"
+	                    :aria-label="showSignupPassword ? 'Nascondi password' : 'Mostra password'">
+	                    <span x-text="showSignupPassword ? '🙈' : '👁️'" aria-hidden="true"></span>
+	                  </button>
+	                </div>
+	                <p class="field-error" x-show="errors.password" x-text="errors.password"></p>
+	
+	                <!-- password strength: same color language as .ticket-status -->
+	                <div class="strength-meter" x-show="signup.password.length > 0">
+	                  <div class="strength-bars">
+	                    <div class="strength-bar" :style="strengthBarStyle(0)"></div>
+	                    <div class="strength-bar" :style="strengthBarStyle(1)"></div>
+	                    <div class="strength-bar" :style="strengthBarStyle(2)"></div>
+	                  </div>
+	                  <span class="strength-label" x-text="strengthLabel"></span>
+	                </div>
+	              </div>
+	
+	              <div class="field-group">
+	                <label class="field-label" for="signup-password-confirm">Conferma password</label>
+	                <div class="field-input-wrap" :class="{ 'has-error': errors.passwordConfirm }">
+	                  <input
+	                    id="signup-password-confirm"
+	                    type="password"
+	                    autocomplete="new-password"
+	                    placeholder="Ripeti la password"
+	                    x-model="signup.passwordConfirm"
+	                    @input="errors.passwordConfirm = ''"
+	                    :aria-invalid="!!errors.passwordConfirm">
+	                </div>
+	                <p class="field-error" x-show="errors.passwordConfirm" x-text="errors.passwordConfirm"></p>
+	              </div>
+	
+	              <button type="submit" class="btn btn-primary btn-block" :disabled="loading">
+	                <span x-show="loading" class="spinner" aria-hidden="true"></span>
+	                <span x-text="loading ? 'Creazione account…' : 'Crea account'"></span>
+	              </button>
+	            </form>
+	
+	            <p class="auth-switch">
+	              Hai già un account?
+	              <button type="button" @click="switchMode('login')">Accedi</button>
+	            </p>
+	          </div>
+	        </template>
+	
+	      </div>
+	    </div>
+	  </section>
+	</main>
 
 
 
+	<script src="/js/access.js"></script>
+	<script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.5/cdn.min.js"></script>
 </body>
 </html>

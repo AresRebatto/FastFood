@@ -1,0 +1,161 @@
+
+[x-cloak] { display: none !important; }
+
+.ordini-page {
+padding-block: 2rem 4rem;
+}
+
+.ordini-page__head {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 1rem;
+flex-wrap: wrap;
+margin-bottom: 1.5rem;
+}
+
+.ordini-page__title {
+font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+font-size: 1.75rem;
+color: var(--color-text, #eef2ec);
+margin: 0;
+}
+
+.ordini-empty {
+font-family: var(--font-body, 'Inter', sans-serif);
+color: var(--color-text-muted, #9fae9c);
+padding: 2rem 0;
+text-align: center;
+}
+
+.ordini-list {
+display: flex;
+flex-direction: column;
+gap: 1rem;
+}
+
+.ordine-card {
+background: var(--color-surface, #223327);
+border: 1px solid var(--color-border, #33452f);
+border-radius: var(--radius-lg, 14px);
+padding: 1.25rem 1.5rem;
+font-family: var(--font-body, 'Inter', sans-serif);
+color: var(--color-text, #eef2ec);
+transition: opacity .2s ease;
+}
+
+.ordine-card--done {
+opacity: .65;
+}
+
+.ordine-card__top {
+display: flex;
+align-items: flex-start;
+justify-content: space-between;
+gap: 1rem;
+}
+
+.ordine-card__ristorante {
+font-family: var(--font-heading, 'Space Grotesk', sans-serif);
+font-size: 1.15rem;
+margin: 0 0 .25rem;
+}
+
+.ordine-card__via {
+display: flex;
+align-items: center;
+gap: .35rem;
+margin: 0;
+color: var(--color-text-muted, #9fae9c);
+font-size: .875rem;
+}
+
+.ordine-card__pin { flex-shrink: 0; }
+
+.stato-badge {
+flex-shrink: 0;
+padding: .3rem .7rem;
+border-radius: 999px;
+font-size: .75rem;
+font-weight: 600;
+letter-spacing: .02em;
+white-space: nowrap;
+}
+
+.stato-badge--O { background: rgba(159,174,156,.18); color: var(--color-text-muted, #9fae9c); }
+.stato-badge--P { background: rgba(212,161,47,.2); color: var(--color-primary, #d4a12f); }
+.stato-badge--\> { background: rgba(212,161,47,.35); color: var(--color-primary, #d4a12f); }
+.stato-badge--C { background: rgba(120,178,120,.2); color: #8fce8f; }
+
+.ordine-stepper {
+margin: 1rem 0;
+}
+
+.ordine-stepper__track {
+height: 4px;
+background: var(--color-border, #33452f);
+border-radius: 999px;
+overflow: hidden;
+}
+
+.ordine-stepper__fill {
+height: 100%;
+background: var(--color-primary, #d4a12f);
+transition: width .4s ease;
+}
+
+.ordine-stepper__labels {
+display: flex;
+justify-content: space-between;
+margin-top: .4rem;
+font-size: .7rem;
+color: var(--color-text-muted, #9fae9c);
+}
+
+.ordine-stepper__labels .is-active {
+color: var(--color-primary, #d4a12f);
+font-weight: 600;
+}
+
+.ordine-piatti {
+list-style: none;
+margin: 0 0 1rem;
+padding: 0;
+display: flex;
+flex-direction: column;
+gap: .3rem;
+font-size: .9rem;
+}
+
+.ordine-piatti li {
+display: flex;
+gap: .5rem;
+}
+
+.ordine-piatti__qty {
+font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+color: var(--color-primary, #d4a12f);
+}
+
+.ordine-card__footer {
+display: flex;
+align-items: center;
+justify-content: space-between;
+flex-wrap: wrap;
+gap: .75rem;
+padding-top: .75rem;
+border-top: 1px solid var(--color-border, #33452f);
+}
+
+.ordine-card__meta {
+display: flex;
+align-items: center;
+gap: 1rem;
+font-family: var(--font-mono, 'IBM Plex Mono', monospace);
+font-size: .85rem;
+}
+
+.ordine-timer--ready {
+color: var(--color-primary, #d4a12f);
+font-weight: 600;
+}
