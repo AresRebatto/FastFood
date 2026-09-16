@@ -111,12 +111,12 @@ router.get("/search-result/:kind", middlewares.verifyJWT, async (req, res) => {
   try {
 
 		const results = await restaurantServices.searchByKind(req.db, kind, q);
-		console.log(results);
+
 		res.render('search-results', {
 			results,
 			searchKind: kind,
 			query: q,
-			role: req.user.ruolo
+			role: req.user?.ruolo ?? ""
 		})
   } catch (err) {
     console.error("Errore durante la ricerca:", err.message);
@@ -164,7 +164,7 @@ router.get("/ristorante/:id", middlewares.verifyJWT, async (req, res) => {
 		const restaurant = await restaurantServices.searchByRestaurantId(req.db, restaurantId)
 		res.render("ristorante", { ristorante: restaurant, role: req.user.ruolo, idRistorante: restaurantId });
 	} catch (error) {
-	 console.error("Errore eliminazione ristorante:", error.message);
+	 console.error("Errore interno:", error.message);
     const statusCode = error.statusCode || 500;
 
     return res
@@ -421,7 +421,7 @@ router.get("/statistiche", middlewares.verifyJWT, async (req, res) => {
       role: req.user.ruolo
     });
   } catch (err) {
-    console.error("Errore checkout:", err.message);
+    console.error("Errore interno:", err.message);
     return res.status(500).json({ Error: "Errore interno." });
   }
 });

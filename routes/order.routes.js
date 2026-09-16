@@ -108,7 +108,7 @@ router.get("/ordini", middlewares.verifyJWT, async (req, res) => {
       role: req.user.ruolo
     });
   } catch (err) {
-    console.error("Errore checkout:", err.message);
+    console.error("Errore interno:", err.message);
     return res.status(500).json({ Error: "Errore interno." });
   }
 });
@@ -149,7 +149,7 @@ router.get("/ordini-ricevuti", middlewares.verifyJWT, async (req, res) => {
       role: req.user.ruolo
     });
   } catch (err) {
-    console.error("Errore checkout:", err.message);
+    console.error("Errore interno:", err.message);
     return res.status(500).json({ Error: "Errore interno." });
   }
 });
@@ -234,7 +234,6 @@ router.post("/invia-ordine", middlewares.verifyJWT, async (req, res) => {
 	    return res.status(400).json({ Error: "Dati richiesta non validi o incompleti." });
 	  }
 
-		console.log(data.idRistorante);
 		await orderServices.creaOrdineUtente(req.db, req.user.sub, data);
 
 		return res
@@ -312,7 +311,6 @@ router.post("/invio-ordine", middlewares.verifyJWT, async (req, res) => {
 			return res.status(400).json({ Error: "E' necessario fornire tutti i campi obbligatori" });
 		}
 
-		console.log(idRistorante);
 		const sum = items.reduce((total, item) => total + ((item.price || 0) * (item.qty || 1)), 0);
 
 		const ordineTemporaneo = {
@@ -393,7 +391,7 @@ router.post("/conferma-ordine", middlewares.verifyJWT, async (req, res) => {
 	return res.status(200).json({ok: true});
 
 	} catch (err) {
-		console.error("Errore invio ordine:", err.message);
+		console.error("Errore conferma ordine:", err.message);
 		const statusCode = err.statusCode || 500;
 		return res
 			.status(statusCode)

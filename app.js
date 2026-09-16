@@ -63,7 +63,7 @@ app.get("/", middlewares.verifyJWT, async (req, res) => {
     }
 
     res.render('index', {
-      role: req.user?.ruolo,
+      role: req.user?.ruolo ?? "",
       consigliati
     });
   } catch (error) {

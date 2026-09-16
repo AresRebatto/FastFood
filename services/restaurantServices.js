@@ -215,10 +215,10 @@ async function eliminaOrdiniRistorante(db, ristoranteId) {
 
   const result = await db.collection('Utente').updateMany(
     { "ordini.ristorante_id": idStr }, // Filtra solo gli utenti che hanno ordinato da quel ristorante
-    { 
-      $pull: { 
+    {
+      $pull: {
         ordini: { ristorante_id: idStr } // Se la proprietà nell'ordine ha un nome diverso (es. ristoranteId), adatta questo campo
-      } 
+      }
     }
   );
 
@@ -227,7 +227,7 @@ async function eliminaOrdiniRistorante(db, ristoranteId) {
 
 async function searchByKind(db, kind, q) {
 	const queryRegex = new RegExp(q.trim(), 'i');
-	console.log(queryRegex);
+
   const collection = db.collection("Ristorante");
   const DISTANZA_MOCK = 2.5; // Distanza cablata per ora
 
