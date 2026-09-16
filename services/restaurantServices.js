@@ -1,7 +1,15 @@
 const { ObjectId } = require("mongodb");
 
+/**
+ * Recupera tutti i ristoranti associati a uno specifico ID ristoratore.
+ * Gestisce la ricerca sia se l'ID è memorizzato come ObjectId sia come Stringa.
+ *
+ * @async
+ * @param {import('mongodb').Db} db - L'istanza del database MongoDB.
+ * @param {string|import('mongodb').ObjectId} ristoratoreId - L'ID del ristoratore da cercare.
+ * @returns {Promise<Array<Object>>} Una promise che risolve con un array di documenti ristorante trovati. Restituisce un array vuoto se `ristoratoreId` non è fornito.
+ */
 async function findRestaurantsByRistoratoreId(db, ristoratoreId) {
-
 	if (!ristoratoreId) {
     return [];
   }
@@ -24,6 +32,21 @@ async function findRestaurantsByRistoratoreId(db, ristoratoreId) {
   return findedRestaurant;
 }
 
+/**
+ * Aggiunge un nuovo ristorante nel database previa validazione dei dati obbligatori e della Partita IVA.
+ *
+ * @async
+ * @param {import('mongodb').Db} db - L'istanza del database MongoDB.
+ * @param {string|import('mongodb').ObjectId} userId - L'ID dell'utente ristoratore che crea il ristorante.
+ * @param {Object} data - I dati del ristorante da inserire.
+ * @param {string} data.nome - Nome del ristorante.
+ * @param {string} data.via - Indirizzo del ristorante.
+ * @param {string} data.n_tell - Numero di telefono del ristorante.
+ * @param {string|number} data.piva - Partita IVA (deve contenere esattamente 11 cifre).
+ * @param {Array<Object>} [data.menu=[]] - Array contenente la lista dei piatti/menù.
+ * @returns {Promise<Object>} Il documento del ristorante creato, completo di `_id` generato e timestamp `createdAt`.
+ * @throws {Error} Con `statusCode = 400` se mancano campi obbligatori o la P.IVA non è valida (non ha 11 cifre).
+ */
 async function addRistorante(db, userId, data) {
     const { nome, via, n_tell, piva, menu } = data;
 
@@ -61,6 +84,24 @@ async function addRistorante(db, userId, data) {
     };
 }
 
+/**
+ * Aggiorna i dati di un ristorante esistente previa verifica dei permessi dell'utente e validazione dell'input.
+ *
+ * @async
+ * @param {import('mongodb').Db} db - L'istanza del database MongoDB.
+ * @param {string|import('mongodb').ObjectId} ristoranteId - L'ID del ristorante da aggiornare.
+ * @param {string|import('mongodb').ObjectId} userId - L'ID dell'utente che richiede la modifica.
+ * @param {Object} data - I nuovi dati con cui aggiornare il ristorante.
+ * @param {string} data.nome - Nuovo nome del ristorante.
+ * @param {string} data.via - Nuovo indirizzo del ristorante.
+ * @param {string} data.n_tell - Nuovo numero di telefono.
+ * @param {string|number} data.piva - Nuova Partita IVA (deve contenere esattamente 11 cifre).
+ * @param {Array<Object>} [data.menu=[]] - Nuovo array menù.
+ * @returns {Promise<Object>} L'oggetto aggiornato con l'ID, il ristoratore e i dati aggiornati con timestamp `updatedAt`.
+ * @throws {Error} Con `statusCode = 400` se l'ID ristorante non è valido, se mancano campi obbligatori o la P.IVA è errata.
+ * @throws {Error} Con `statusCode = 404` se il ristorante non viene trovato nel database.
+ * @throws {Error} Con `statusCode = 403` se l'utente non è il proprietario del ristorante.
+ */
 async function updateRistorante(db, ristoranteId, userId, data) {
   // Validazione ID MongoDB
   if (!ObjectId.isValid(ristoranteId)) {
@@ -123,7 +164,18 @@ async function updateRistorante(db, ristoranteId, userId, data) {
   };
 }
 
-
+/**
+ * Elimina un ristorante dal database previa verifica di esistenza e autorizzazione del proprietario.
+ *
+ * @async
+ * @param {import('mongodb').Db} db - L'istanza del database MongoDB.
+ * @param {string|import('mongodb').ObjectId} ristoranteId - L'ID del ristorante da eliminare.
+ * @param {string|import('mongodb').ObjectId} userId - L'ID dell'utente che richiede l'eliminazione.
+ * @returns {Promise<{message: string}>} Un oggetto di conferma con un messaggio di successo.
+ * @throws {Error} Con `statusCode = 400` se l'ID ristorante fornito non è un ID MongoDB valido.
+ * @throws {Error} Con `statusCode = 404` se il ristorante non viene trovato nel database.
+ * @throws {Error} Con `statusCode = 403` se l'utente non è il proprietario del ristorante.
+ */
 async function deleteRistorante(db, ristoranteId, userId) {
   if (!ObjectId.isValid(ristoranteId)) {
     const error = new Error("ID ristorante non valido.");

@@ -156,13 +156,10 @@ function authPage(startingMode) {
         if (!res.ok) {
        	switch (res.status) {
                 case 400:
-                  // Manca un parametro o ruolo non valido - non dovrebbe succedere
-                  // se validateSignup() ha già fatto il suo lavoro, ma copriamo il caso
                   this.formError = data.Error || 'Dati non validi. Controlla i campi.';
                   break;
                 case 409:
                   this.formError = 'Esiste già un account con questa email.';
-                  // Bonus UX: porta subito al login precompilando l'email
                   this.errors.email = 'Email già registrata.';
                   break;
                 case 500:

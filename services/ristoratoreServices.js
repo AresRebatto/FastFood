@@ -1,10 +1,31 @@
 const { ObjectId } = require('mongodb');
 
+/**
+ * Calcola e restituisce le statistiche delle vendite per tutti i ristoranti gestiti da un determinato ristoratore.
+ * 
+ * Processa le seguenti metriche per ciascun ristorante:
+ * - Ricavo medio per ordine.
+ * - Incasso giornaliero dettagliato degli ultimi 7 giorni (dal lunedì alla domenica).
+ * - Piatto più venduto (piattoTop) in termini di quantità complessiva ordinata.
+ *
+ * @async
+ * @param {import('mongodb').Db} db - L'istanza del database MongoDB.
+ * @param {string|import('mongodb').ObjectId} ristoratoreId - L'ID del ristoratore di cui recuperare le statistiche.
+ * @returns {Promise<{
+ *   statistiche: Array<{
+ *     nomeRistorante: string,
+ *     ricavoMedio: number,
+ *     incassoUltimaSettimana: { lun: number, mar: number, mer: number, gio: number, ven: number, sab: number, dom: number },
+ *     piattoTop: { idMeal: string, strMeal: string, totaleVenduto: number } | null
+ *   }>
+ * }>} Oggetto contenente l'array con le statistiche elaborate per ogni ristorante.
+ * @throws {Error} Con `statusCode = 404` se non viene trovato alcun ristorante associato al ristoratore.
+ * @throws {Error} Con `statusCode = 500` per eventuali errori di query o esecuzione generici durante l'elaborazione.
+ */
 async function getStatisticheRistoratore(db, ristoratoreId) {
   try {
     const searchRistoratoreId = typeof ristoratoreId === 'string' ? ristoratoreId : ristoratoreId.toString();
 
-    // 1. Recupero di tutti i ristoranti appartenenti al ristoratore
     const ristoranti = await db.collection('Ristorante').find(
       { ristoratore_id: searchRistoratoreId },
       { projection: { _id: 1, nome: 1 } }
@@ -18,7 +39,6 @@ async function getStatisticheRistoratore(db, ristoratoreId) {
 
     const ristorantiIdsStr = ristoranti.map((r) => r._id.toString());
 
-    // 2. Definizione del range di date per l'ultima settimana (ultimi 7 giorni da oggi)
     const ora = new Date();
     const setteGiorniFa = new Date();
     setteGiorniFa.setDate(ora.getDate() - 6);
@@ -27,7 +47,6 @@ async function getStatisticheRistoratore(db, ristoratoreId) {
     // Mappatura da indice giorno JS (0=Dom, 1=Lun...) al formato di output
     const mappaGiorni = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
 
-    // 3. Estrazione degli ordini da tutti gli utenti per i ristoranti del ristoratore
     // Escludiamo gli ordini annullati (es. con stato 'C' o annullato, adattabile se necessario)
     const utenti = await db.collection('Utente').find(
       { 'ordini.ristorante_id': { $in: ristorantiIdsStr } },
@@ -46,7 +65,6 @@ async function getStatisticheRistoratore(db, ristoratoreId) {
       });
     }
 
-    // 4. Aggregazione dei dati degli ordini
     for (const utente of utenti) {
       for (const ordine of utente.ordini || []) {
         const rId = ordine.ristorante_id?.toString();
@@ -81,7 +99,6 @@ async function getStatisticheRistoratore(db, ristoratoreId) {
       }
     }
 
-    // 5. Formattazione finale del risultato
     const statistiche = Array.from(statsMap.values()).map((stats) => {
       // Calcolo ricavo medio
       const ricavoMedio = stats.numeroOrdini > 0
@@ -126,6 +143,7 @@ async function getStatisticheRistoratore(db, ristoratoreId) {
     throw error;
   }
 }
+
 
 /**
  * Elimina tutti i ristoranti associati a un ristoratore e ripulisce

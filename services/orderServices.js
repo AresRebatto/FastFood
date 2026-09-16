@@ -365,7 +365,6 @@ async function getOrdiniRistoratore(db, ristoratoreId) {
       { $sort: { timestamp: -1 } }
     ]).toArray();
 
-    // 3. Ricalcolo dello stato nel DB e formattazione dell'output
     const ordiniAggiornati = await Promise.all(
       ordiniGrezzi.map(async (ord) => {
         // Eseguiamo il ricalcolo e l'aggiornamento automatico dello stato

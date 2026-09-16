@@ -5,7 +5,6 @@ function searchHero() {
     focused: false,
     placeholder: '',
 
-    // Liste dinamiche per la digitazione guidata
     examplesMap: {
       dishes: [
         'cerca una pizza margherita…',
