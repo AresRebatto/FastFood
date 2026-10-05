@@ -172,7 +172,7 @@ router.post("/signup", middlewares.validateCredentials, async (req, res) => {
 
 		const user = userServices.findUserByEmail(req.db, email);
 
-		if (!user) {
+		if (user) {
 			return res.status(409).json({ Error: "Email già registrata" });
 		}
 
